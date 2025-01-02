@@ -1,5 +1,5 @@
 import Chart from '@/components/Chart';
-import styles from './page.module.css';
+import styles from '@styles/page.module.css';
 
 export default function Home() {
    return (

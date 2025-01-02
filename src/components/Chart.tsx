@@ -2,10 +2,10 @@
 
 import { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
-import styles from './Chart.module.css';
+import styles from '@styles/page.module.css';
 import Polygon from './Polygon';
 
-interface ChartProps {
+export interface ChartProps {
    width?: number;
    height?: number;
 }
@@ -77,7 +77,6 @@ export default function Chart({ width = 1000, height = 800 }: ChartProps) {
       };
    }, [data, height, innerHeight, innerWidth, margin.left, margin.top, selectedPoints, width]);
 
-   
    // Helper functions
    const setupSVG = () => {
       if (!svgRef.current) throw new Error('SVG ref is not initialized');

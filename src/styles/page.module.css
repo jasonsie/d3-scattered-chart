@@ -14,9 +14,3 @@
   gap: 2rem;
 }
 
-/* D3 Brush styles */
-.brush .selection {
-  fill: #69b3a2;
-  fill-opacity: 0.2;
-  stroke: #444;
-}

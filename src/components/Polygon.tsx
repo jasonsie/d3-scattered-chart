@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import * as d3 from 'd3';
 
-interface PolygonProps {
+export interface PolygonProps {
    g: d3.Selection<SVGGElement, unknown, null, undefined>;
    onSelectionChange?: (selectedPoints: Array<{ x: number; y: number }>) => void;
    data: Array<{ x: number; y: number }>;
@@ -12,8 +12,8 @@ interface PolygonProps {
    margin: { top: number; right: number; bottom: number; left: number };
 }
 
-type Point = { x: number; y: number };
-type Polygon = { label: string; points: Point[] };
+export type Point = { x: number; y: number };
+export type Polygon = { label: string; points: Point[] };
 /**
  * Polygon Component
  *
@@ -148,11 +148,11 @@ export default function Polygon({
       setIsDrawing(false);
       const newPolygon: Polygon = {
          label: `G${polygons.length + 1}`,
-         points: currentPoints
+         points: currentPoints,
       };
       const newPolygons = [...polygons, newPolygon];
       setPolygons(newPolygons);
-      updateSelectedPoints(newPolygons.map(p => p.points));
+      updateSelectedPoints(newPolygons.map((p) => p.points));
       setCurrentPoints([]);
    };
 
@@ -169,8 +169,8 @@ export default function Polygon({
    const renderFinishedPolygons = (group: d3.Selection<SVGGElement, unknown, null, undefined>) => {
       const lineGenerator = d3
          .line<Point>()
-         .x(d => d.x)
-         .y(d => d.y);
+         .x((d) => d.x)
+         .y((d) => d.y);
 
       // Create polygon groups
       const polygonGroups = group
@@ -182,27 +182,27 @@ export default function Polygon({
       // Render polygon paths
       polygonGroups
          .selectAll('path.finished-polygon')
-         .data(d => [d])
+         .data((d) => [d])
          .join('path')
          .attr('class', 'finished-polygon')
          .attr('fill', 'rgba(128, 128, 128, 0.1)')
          .attr('stroke', 'rgba(128, 128, 128, 0.2)')
          .attr('stroke-width', 2)
-         .attr('d', d => lineGenerator(d.points) + 'Z');
+         .attr('d', (d) => lineGenerator(d.points) + 'Z');
 
       // Update labels to use new Polygon type
       polygonGroups
          .selectAll('text.polygon-label')
-         .data(d => [d])
+         .data((d) => [d])
          .join('text')
          .attr('class', 'polygon-label')
-         .attr('x', d => {
-            const points = d.points.map(p => [p.x, p.y]);
+         .attr('x', (d) => {
+            const points = d.points.map((p) => [p.x, p.y]);
             const centroid = d3.polygonCentroid(points as [number, number][]);
             return centroid[0];
          })
-         .attr('y', d => {
-            const points = d.points.map(p => [p.x, p.y]);
+         .attr('y', (d) => {
+            const points = d.points.map((p) => [p.x, p.y]);
             const centroid = d3.polygonCentroid(points as [number, number][]);
             return centroid[1];
          })
@@ -211,7 +211,7 @@ export default function Polygon({
          .attr('fill', 'black')
          .attr('font-size', '14px')
          .attr('font-weight', 'bold')
-         .text(d => d.label);
+         .text((d) => d.label);
 
       // Update vertices to use points from new Polygon type
       renderPolygonVertices(polygonGroups);
@@ -222,11 +222,11 @@ export default function Polygon({
    ) => {
       groups
          .selectAll('circle.vertex')
-         .data(d => d.points)
+         .data((d) => d.points)
          .join('circle')
          .attr('class', 'vertex')
-         .attr('cx', d => d.x)
-         .attr('cy', d => d.y)
+         .attr('cx', (d) => d.x)
+         .attr('cy', (d) => d.y)
          .attr('r', 4)
          .attr('fill', 'black')
          .attr('fill-opacity', '0.1')
@@ -243,8 +243,8 @@ export default function Polygon({
 
       const lineGenerator = d3
          .line<Point>()
-         .x(d => d.x)
-         .y(d => d.y);
+         .x((d) => d.x)
+         .y((d) => d.y);
 
       polygon.attr('d', lineGenerator(currentPoints) + (close ? 'Z' : ''));
       renderCurrentVertices();
@@ -262,16 +262,9 @@ export default function Polygon({
          .enter()
          .append('circle')
          .attr('class', 'vertex')
-         .merge(
-            circles as d3.Selection<
-               SVGCircleElement,
-               Point,
-               SVGGElement,
-               unknown
-            >
-         )
-         .attr('cx', d => d.x)
-         .attr('cy', d => d.y)
+         .merge(circles as d3.Selection<SVGCircleElement, Point, SVGGElement, unknown>)
+         .attr('cx', (d) => d.x)
+         .attr('cy', (d) => d.y)
          .attr('r', 4)
          .attr('fill', 'black') // Changed to black
          .attr('fill-opacity', '0.8') // Set opacity to 0.8
@@ -281,10 +274,10 @@ export default function Polygon({
    };
 
    const updateSelectedPoints = (polygonPoints: Point[][]) => {
-      const selectedPoints = data.filter(d => {
+      const selectedPoints = data.filter((d) => {
          const testPoint: [number, number] = [xScale(d.x), yScale(d.y)];
-         return polygonPoints.some(points => {
-            const pointsArray = points.map(p => [p.x, p.y] as [number, number]);
+         return polygonPoints.some((points) => {
+            const pointsArray = points.map((p) => [p.x, p.y] as [number, number]);
             return d3.polygonContains(pointsArray, testPoint);
          });
       });
