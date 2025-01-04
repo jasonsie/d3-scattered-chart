@@ -38,6 +38,9 @@ export default function Polygon({
    const [isDrawing, setIsDrawing] = useState(false);
    const [currentPoints, setCurrentPoints] = useState<Point[]>([]);
    const [polygons, setPolygons] = useState<Polygon[]>([]);
+   // Add new state for selected polygon and editing
+   const [selectedPolygon, setSelectedPolygon] = useState<string | null>(null);
+   const [editingLabel, setEditingLabel] = useState<string | null>(null);
 
    useEffect(() => {
       const drawingGroup = setupDrawingGroup();
@@ -56,7 +59,7 @@ export default function Polygon({
 
       // Cleanup
       return () => cleanupDrawing(svg, drawingGroup);
-   }, [g, currentPoints, polygons, isDrawing, onSelectionChange, data, xScale, yScale, margin]);
+   }, [g, currentPoints, polygons, isDrawing, onSelectionChange, data, xScale, yScale, margin, selectedPolygon]);
 
    // Setup Functions
    const setupDrawingGroup = () => {
@@ -131,6 +134,7 @@ export default function Polygon({
    const startNewPolygon = (point: { x: number; y: number }) => {
       setIsDrawing(true);
       setCurrentPoints([point]);
+      setSelectedPolygon(null);
    };
 
    const continueOrFinishPolygon = (point: { x: number; y: number }) => {
@@ -172,46 +176,99 @@ export default function Polygon({
          .x((d) => d.x)
          .y((d) => d.y);
 
-      // Create polygon groups
+      // Create polygon groups with pointer-events
       const polygonGroups = group
          .selectAll('g.polygon-group')
          .data(polygons)
          .join('g')
-         .attr('class', 'polygon-group');
+         .attr('class', 'polygon-group')
+         .style('pointer-events', 'all')
+         .style('cursor', 'pointer');
 
-      // Render polygon paths
+      // Modify polygon paths
       polygonGroups
          .selectAll('path.finished-polygon')
          .data((d) => [d])
          .join('path')
          .attr('class', 'finished-polygon')
-         .attr('fill', 'rgba(128, 128, 128, 0.1)')
-         .attr('stroke', 'rgba(128, 128, 128, 0.2)')
+         .style('pointer-events', () => isDrawing ? 'none' : 'all')
+         .attr('fill', (d) =>
+            d.label === selectedPolygon ? 'rgba(255, 165, 0, 0.2)' : 'rgba(128, 128, 128, 0.1)'
+         )
+         .attr('stroke', (d) =>
+            d.label === selectedPolygon ? 'rgba(255, 165, 0, 0.5)' : 'rgba(128, 128, 128, 0.2)'
+         )
          .attr('stroke-width', 2)
-         .attr('d', (d) => lineGenerator(d.points) + 'Z');
+         .attr('d', (d) => lineGenerator(d.points) + 'Z')
+         .on('mousedown', (event: MouseEvent, d) => {
+            event.stopPropagation();
+            handlePolygonClick(d.label);
+         });
 
-      // Update labels to use new Polygon type
+      // Update labels with editing functionality
       polygonGroups
-         .selectAll('text.polygon-label')
+         .selectAll('g.label-container')
          .data((d) => [d])
-         .join('text')
-         .attr('class', 'polygon-label')
-         .attr('x', (d) => {
+         .join('g')
+         .attr('class', 'label-container')
+         .each(function (d) {
+            const container = d3.select(this);
             const points = d.points.map((p) => [p.x, p.y]);
             const centroid = d3.polygonCentroid(points as [number, number][]);
-            return centroid[0];
-         })
-         .attr('y', (d) => {
-            const points = d.points.map((p) => [p.x, p.y]);
-            const centroid = d3.polygonCentroid(points as [number, number][]);
-            return centroid[1];
-         })
-         .attr('text-anchor', 'middle')
-         .attr('dominant-baseline', 'middle')
-         .attr('fill', 'black')
-         .attr('font-size', '14px')
-         .attr('font-weight', 'bold')
-         .text((d) => d.label);
+
+            if (editingLabel === d.label) {
+               // Show input field when editing
+               const foreignObject = container
+                  .selectAll('foreignObject')
+                  .data([d])
+                  .join('foreignObject')
+                  .attr('x', centroid[0] - 40)
+                  .attr('y', centroid[1] - 15)
+                  .attr('width', 80)
+                  .attr('height', 30);
+
+               foreignObject
+                  .selectAll('xhtml:input')
+                  .data([d])
+                  .join('xhtml:input')
+                  .attr('value', d.label)
+                  .style('width', '100%')
+                  .style('border', '1px solid black')
+                  .style('border-radius', '3px')
+                  .style('padding', '2px')
+                  .style('text-align', 'center')
+                  .on('blur', (event: { target: HTMLInputElement }) =>
+                     handleLabelChange(d.label, event.target.value)
+                  )
+                  .on('keypress', (event: KeyboardEvent) => {
+                     if (event.key === 'Enter') {
+                        handleLabelChange(d.label, (event.target as HTMLInputElement).value);
+                     }
+                  })
+                  .each(function () {
+                     (this as HTMLInputElement).focus();
+                  });
+            } else {
+               // Show regular text when not editing
+               container
+                  .selectAll('text')
+                  .data([d])
+                  .join('text')
+                  .attr('class', 'polygon-label')
+                  .attr('x', centroid[0])
+                  .attr('y', centroid[1])
+                  .attr('text-anchor', 'middle')
+                  .attr('dominant-baseline', 'middle')
+                  .attr('fill', 'black')
+                  .attr('font-size', '14px')
+                  .attr('font-weight', 'bold')
+                  .style('user-select', 'none')
+                  .style('-webkit-user-select', 'none')
+                  .style('-moz-user-select', 'none')
+                  .text(d.label)
+                  .on('dblclick', (event, d) => handleLabelDoubleClick(event, d.label));
+            }
+         });
 
       // Update vertices to use points from new Polygon type
       renderPolygonVertices(polygonGroups);
@@ -301,6 +358,27 @@ export default function Polygon({
    ) => {
       d3.select(svg).on('mousemove', null).on('mousedown', null);
       drawingGroup.remove();
+   };
+
+   // Add new function to handle polygon selection
+   const handlePolygonClick = (label: string) => {
+      if (isDrawing) return; // Prevent selection during drawing mode
+      console.log('handlePolygonClick', label);
+      setSelectedPolygon(label === selectedPolygon ? null : label);
+   };
+
+   // Add new function to handle label editing
+   const handleLabelDoubleClick = (event: MouseEvent, label: string) => {
+      console.log('handleLabelDoubleClick', label);
+      event.stopPropagation();
+      setEditingLabel(label);
+   };
+
+   // Add new function to handle label input changes
+   const handleLabelChange = (label: string, newValue: string) => {
+      console.log('handleLabelChange', label, newValue);
+      setPolygons(polygons.map((p) => (p.label === label ? { ...p, label: newValue } : p)));
+      setEditingLabel(null);
    };
 
    return null;
