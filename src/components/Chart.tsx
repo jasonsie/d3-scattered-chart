@@ -36,6 +36,10 @@ export default function Chart({ width = 1000, height = 800 }: ChartProps) {
       undefined
    > | null>(null);
 
+   // New state for scales
+   const [xScale, setXScale] = useState<d3.ScaleLinear<number, number> | null>(null);
+   const [yScale, setYScale] = useState<d3.ScaleLinear<number, number> | null>(null);
+
    // Chart dimensions
    const margin = { top: 2, right: 2, bottom: 2, left: 2 };
    const innerWidth = width - margin.left - margin.right;
@@ -63,14 +67,16 @@ export default function Chart({ width = 1000, height = 800 }: ChartProps) {
          .domain([d3.min(data, d => d.y) || 0, d3.max(data, d => d.y) || 1000])
          .range([innerHeight, 0]);
 
+      // Set scales in state
+      setXScale(x);
+      setYScale(y);
+
       // Setup SVG container
       const svg = setupSVG();
       const g = createChartGroup(svg);
 
       // Add chart elements
       addAxes(g, x, y);
-      // addGridLines(g, x, y);
-      // addBackgroundRect(g);
       addDataPoints(g, x, y);
 
       setGroupSelection(g);
@@ -168,13 +174,13 @@ export default function Chart({ width = 1000, height = 800 }: ChartProps) {
          {data.length > 0 ? (
             <>
                <svg ref={svgRef} />
-               {groupSelection && (
+               {groupSelection && xScale && yScale && (
                   <Polygon
                      g={groupSelection}
                      onSelectionChange={setSelectedPoints}
                      data={data}
-                     xScale={d3.scaleLinear().domain([0, 100]).range([0, innerWidth])}
-                     yScale={d3.scaleLinear().domain([0, 100]).range([innerHeight, 0])}
+                     xScale={xScale}
+                     yScale={yScale}
                      margin={margin}
                   />
                )}
