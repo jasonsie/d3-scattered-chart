@@ -61,18 +61,7 @@ export default function Polygon({
 
       // Cleanup
       return () => cleanupDrawing(svg, drawingGroup);
-   }, [
-      g,
-      currentPoints,
-      polygons,
-      isDrawing,
-      onSelectionChange,
-      data,
-      xScale,
-      yScale,
-      margin,
-      selectedPolygon,
-   ]);
+   }, [g, currentPoints, isDrawing, onSelectionChange, selectedPolygon]);
 
    // Setup Functions
    const setupDrawingGroup = () => {
@@ -319,7 +308,7 @@ export default function Polygon({
                   .style('user-select', 'none')
                   .style('-webkit-user-select', 'none')
                   .style('-moz-user-select', 'none')
-                  .text(d => `n = ${countPointsInPolygon(d.points)}`);
+                  .text((d) => `n = ${countPointsInPolygon(d.points)}`);
 
                // Add edit button if polygon is selected
                if (d.label === selectedPolygon) {
