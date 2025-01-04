@@ -18,7 +18,8 @@ interface ChartState {
 type ChartAction =
    | { type: 'INIT'; data: CellData[] }
    | { type: 'SET_POLYGONS'; polygons: Polygon[] }
-   | { type: 'UPDATE_POLYGON'; label: string; newLabel: string; newColor: string }
+   | { type: 'SET_CURRENT_POINTS'; points: Point[] }
+   | { type: 'UPDATE_POLYGON'; id: number; newLabel: string; newColor: string }
    | { type: 'SET_SELECTED_POLYGON'; id: number | null }
    | { type: 'SET_SHOW_POPUP'; show: boolean }
    | { type: 'SET_LOADING'; loading: boolean }
@@ -54,18 +55,19 @@ function chartReducer(state: ChartState, action: ChartAction): ChartState {
          return { ...state, data: action.data };
       case 'SET_POLYGONS':
          return { ...state, polygons: action.polygons };
+      case 'SET_CURRENT_POINTS':
+         return { ...state, currentPoints: action.points };
       case 'UPDATE_POLYGON':
          return {
             ...state,
             polygons: state.polygons.map((p) =>
-               p.label === action.label
+               p.id === action.id
                   ? { ...p, label: action.newLabel, color: action.newColor }
                   : p
             ),
          };
       case 'SET_SELECTED_POLYGON':
          return { ...state, selectedPolygonId: action.id };
-      // UI State
       case 'SET_DRAWING':
          return { ...state, isDrawing: action.isDrawing };
       case 'SET_SHOW_POPUP':

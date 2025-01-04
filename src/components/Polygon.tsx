@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import * as d3 from 'd3';
 import PopupEditor from './PopupEditor';
+import { useChartState, useChartDispatch } from '@/contexts/ChartContext';
 
 export interface PolygonProps {
    g: d3.Selection<SVGGElement, unknown, null, undefined>;
@@ -27,27 +28,10 @@ export type Polygon = { id: number; label: string; points: Point[]; color?: stri
  * - Visual feedback during drawing
  * - Point selection within polygons
  */
-export default function Polygon({
-   g,
-   onSelectionChange,
-   data,
-   xScale,
-   yScale,
-   margin,
-}: PolygonProps) {
-   /*
-      State for managing current and completed polygons
-         1. polygons: Array of completed polygons
-         2. currentPoints: Array of points currently being drawn
-         3. selectedPolygon: Label of the currently selected polygon
-         4. isDrawing: Boolean indicating if a polygon is currently being drawn
-         5. showPopup: Boolean indicating if the popup editor is shown
-   */
-   const [polygons, setPolygons] = useState<Polygon[]>([]);
-   const [currentPoints, setCurrentPoints] = useState<Point[]>([]);
-   const [selectedPolygonId, setSelectedPolygonId] = useState<number | null>(null);
-   const [isDrawing, setIsDrawing] = useState(false);
-   const [showPopup, setShowPopup] = useState(false);
+export default function Polygon({ g, data, xScale, yScale, margin }: PolygonProps) {
+   // Replace local state with context
+   const { polygons, currentPoints, selectedPolygonId, isDrawing, showPopup } = useChartState();
+   const dispatch = useChartDispatch();
 
    useEffect(() => {
       const drawingGroup = setupDrawingGroup();
@@ -66,7 +50,7 @@ export default function Polygon({
 
       // Cleanup
       return () => cleanupDrawing(svg, drawingGroup);
-   }, [g, currentPoints, isDrawing, onSelectionChange, polygons, selectedPolygonId]);
+   }, [g, currentPoints, isDrawing, polygons, selectedPolygonId]);
 
    // Setup Functions
    const setupDrawingGroup = () => {
@@ -139,9 +123,11 @@ export default function Polygon({
 
    // Polygon Drawing Logic
    const startNewPolygon = (point: Point) => {
-      setIsDrawing(true);
-      setCurrentPoints([point]);
-      setSelectedPolygonId(null);
+      if (dispatch) {
+         dispatch({ type: 'SET_DRAWING', isDrawing: true });
+         dispatch({ type: 'SET_CURRENT_POINTS', points: [point] });
+         dispatch({ type: 'SET_SELECTED_POLYGON', id: null });
+      }
    };
 
    const continueOrFinishPolygon = (point: Point) => {
@@ -149,23 +135,17 @@ export default function Polygon({
       const distance = Math.hypot(startPoint.x - point.x, startPoint.y - point.y);
 
       if (distance < 10 && currentPoints.length > 2) {
-         finishPolygon();
+         const newPolygon: Polygon = {
+            id: polygons.length + 1,
+            label: `Group-${polygons.length + 1}`,
+            points: currentPoints,
+         };
+         dispatch({ type: 'SET_DRAWING', isDrawing: false });
+         dispatch({ type: 'SET_POLYGONS', polygons: [...polygons, newPolygon] });
+         dispatch({ type: 'SET_CURRENT_POINTS', points: [] });
       } else {
-         setCurrentPoints([...currentPoints, point]);
+         dispatch({ type: 'SET_CURRENT_POINTS', points: [...currentPoints, point] });
       }
-   };
-
-   const finishPolygon = () => {
-      setIsDrawing(false);
-      const newPolygon: Polygon = {
-         id: polygons.length + 1,
-         label: `Group-${polygons.length + 1}`,
-         points: currentPoints,
-      };
-      const newPolygons = [...polygons, newPolygon];
-      setPolygons(newPolygons);
-      updateSelectedPoints(newPolygons.map((p) => p.points));
-      setCurrentPoints([]);
    };
 
    // Update Functions
@@ -300,7 +280,7 @@ export default function Polygon({
                   .on('mousedown', (event: MouseEvent) => {
                      event.preventDefault();
                      event.stopPropagation();
-                     setShowPopup(true);
+                     dispatch({ type: 'SET_SHOW_POPUP', show: true });
                   });
             }
          });
@@ -365,17 +345,6 @@ export default function Polygon({
          .style('cursor', 'pointer');
    };
 
-   const updateSelectedPoints = (polygonPoints: Point[][]) => {
-      const selectedPoints = data.filter((d) => {
-         const testPoint: [number, number] = [xScale(d.x), yScale(d.y)];
-         return polygonPoints.some((points) => {
-            const pointsArray = points.map((p) => [p.x, p.y] as [number, number]);
-            return d3.polygonContains(pointsArray, testPoint);
-         });
-      });
-      onSelectionChange?.(selectedPoints);
-   };
-
    // Event Setup and Cleanup
    const attachEventListeners = (
       svg: SVGSVGElement,
@@ -397,17 +366,19 @@ export default function Polygon({
 
    // Add new function to handle polygon selection
    const handlePolygonClick = (id: number) => {
-      if (isDrawing) return; // Prevent selection during drawing mode
-      console.log('Polygon Click', id);
-      setSelectedPolygonId(id === selectedPolygonId ? null : id);
+      if (isDrawing) return;
+      dispatch({ type: 'SET_SELECTED_POLYGON', id: id === selectedPolygonId ? null : id });
    };
 
    // Add new function to handle polygon updates
    const handlePolygonUpdate = (id: number, newLabel: string, newColor: string) => {
-      setPolygons(
-         polygons.map((p) => (p.id === id ? { ...p, label: newLabel, color: newColor } : p))
-      );
-      setShowPopup(false);
+      dispatch({
+         type: 'UPDATE_POLYGON',
+         id,
+         newLabel,
+         newColor,
+      });
+      dispatch({ type: 'SET_SHOW_POPUP', show: false });
    };
 
    // Add this function to calculate points within a polygon
@@ -428,7 +399,7 @@ export default function Polygon({
                onSave={(newLabel, newColor) =>
                   handlePolygonUpdate(selectedPolygonId, newLabel, newColor)
                }
-               onClose={() => setShowPopup(false)}
+               onClose={() => dispatch({ type: 'SET_SHOW_POPUP', show: false })}
             />
          )}
       </>
