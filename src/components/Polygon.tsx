@@ -39,9 +39,9 @@ export default function Polygon({
    const [isDrawing, setIsDrawing] = useState(false);
    const [currentPoints, setCurrentPoints] = useState<Point[]>([]);
    const [polygons, setPolygons] = useState<Polygon[]>([]);
+
    // Add new state for selected polygon and editing
    const [selectedPolygon, setSelectedPolygon] = useState<string | null>(null);
-   const [editingLabel, setEditingLabel] = useState<string | null>(null);
    const [showPopup, setShowPopup] = useState(false);
 
    useEffect(() => {
@@ -61,7 +61,7 @@ export default function Polygon({
 
       // Cleanup
       return () => cleanupDrawing(svg, drawingGroup);
-   }, [g, currentPoints, isDrawing, onSelectionChange, selectedPolygon]);
+   }, [g, currentPoints, isDrawing, onSelectionChange, polygons, selectedPolygon]);
 
    // Setup Functions
    const setupDrawingGroup = () => {
@@ -153,7 +153,7 @@ export default function Polygon({
    const finishPolygon = () => {
       setIsDrawing(false);
       const newPolygon: Polygon = {
-         label: `G${polygons.length + 1}`,
+         label: `Group-${polygons.length + 1}`,
          points: currentPoints,
       };
       const newPolygons = [...polygons, newPolygon];
@@ -217,7 +217,7 @@ export default function Polygon({
             }
             return 'rgba(128, 128, 128, 0.2)';
          })
-         .attr('stroke-width', 2)
+         .attr('stroke-width', 1)
          .attr('d', (d) => lineGenerator(d.points) + 'Z')
          .on('mousedown', (event: MouseEvent, d) => {
             event.stopPropagation();
@@ -235,102 +235,67 @@ export default function Polygon({
             const points = d.points.map((p) => [p.x, p.y]);
             const centroid = d3.polygonCentroid(points as [number, number][]);
 
-            if (editingLabel === d.label) {
-               // Show input field when editing
-               const foreignObject = container
-                  .selectAll('foreignObject')
-                  .data([d])
-                  .join('foreignObject')
-                  .attr('x', centroid[0] - 40)
-                  .attr('y', centroid[1] - 15)
-                  .attr('width', 80)
-                  .attr('height', 30);
+            const labelGroup = container
+               .selectAll('g.label-group')
+               .data([d])
+               .join('g')
+               .attr('class', 'label-group');
 
-               foreignObject
-                  .selectAll('xhtml:input')
-                  .data([d])
-                  .join('xhtml:input')
-                  .attr('value', d.label)
-                  .style('width', '100%')
-                  .style('border', '1px solid black')
-                  .style('border-radius', '3px')
-                  .style('padding', '2px')
-                  .style('text-align', 'center')
-                  .on('blur', (event: { target: HTMLInputElement }) =>
-                     handleLabelChange(d.label, event.target.value)
-                  )
-                  .on('keypress', (event: KeyboardEvent) => {
-                     if (event.key === 'Enter') {
-                        handleLabelChange(d.label, (event.target as HTMLInputElement).value);
-                     }
-                  })
-                  .each(function () {
-                     (this as HTMLInputElement).focus();
-                  });
-            } else {
-               // Show regular text when not editing
-               const labelGroup = container
-                  .selectAll('g.label-group')
-                  .data([d])
-                  .join('g')
-                  .attr('class', 'label-group');
+            // Add the label text
+            labelGroup
+               .selectAll('text.polygon-label')
+               .data([d])
+               .join('text')
+               .attr('class', 'polygon-label')
+               .attr('x', centroid[0])
+               .attr('y', centroid[1] - 10)
+               .attr('text-anchor', 'middle')
+               .attr('dominant-baseline', 'middle')
+               .attr('fill', 'black')
+               .attr('font-size', '14px')
+               .attr('font-weight', 'bold')
+               .style('user-select', 'none')
+               .style('-webkit-user-select', 'none')
+               .style('-moz-user-select', 'none')
+               .text(d.label);
 
-               // Add the label text
+            // Add count text
+            labelGroup
+               .selectAll('text.count-label')
+               .data([d])
+               .join('text')
+               .attr('class', 'count-label')
+               .attr('x', centroid[0])
+               .attr('y', centroid[1] + 10)
+               .attr('text-anchor', 'middle')
+               .attr('dominant-baseline', 'middle')
+               .attr('fill', 'black')
+               .attr('font-size', '12px')
+               .style('user-select', 'none')
+               .style('-webkit-user-select', 'none')
+               .style('-moz-user-select', 'none')
+               .text((d) => `n = ${countPointsInPolygon(d.points)}`);
+
+            // Add edit button if polygon is selected
+            if (d.label === selectedPolygon) {
                labelGroup
-                  .selectAll('text.polygon-label')
+                  .selectAll('text.edit-button')
                   .data([d])
                   .join('text')
-                  .attr('class', 'polygon-label')
-                  .attr('x', centroid[0])
+                  .attr('class', 'edit-button')
+                  .attr('x', centroid[0] + 40)
                   .attr('y', centroid[1] - 10)
-                  .attr('text-anchor', 'middle')
-                  .attr('dominant-baseline', 'middle')
-                  .attr('fill', 'black')
+                  .attr('fill', 'blue')
                   .attr('font-size', '14px')
-                  .attr('font-weight', 'bold')
+                  .style('cursor', 'pointer')
+                  .style('pointer-events', 'all')
                   .style('user-select', 'none')
-                  .style('-webkit-user-select', 'none')
-                  .style('-moz-user-select', 'none')
-                  .text(d.label);
-
-               // Add count text
-               labelGroup
-                  .selectAll('text.count-label')
-                  .data([d])
-                  .join('text')
-                  .attr('class', 'count-label')
-                  .attr('x', centroid[0])
-                  .attr('y', centroid[1] + 10)
-                  .attr('text-anchor', 'middle')
-                  .attr('dominant-baseline', 'middle')
-                  .attr('fill', 'black')
-                  .attr('font-size', '12px')
-                  .style('user-select', 'none')
-                  .style('-webkit-user-select', 'none')
-                  .style('-moz-user-select', 'none')
-                  .text((d) => `n = ${countPointsInPolygon(d.points)}`);
-
-               // Add edit button if polygon is selected
-               if (d.label === selectedPolygon) {
-                  labelGroup
-                     .selectAll('text.edit-button')
-                     .data([d])
-                     .join('text')
-                     .attr('class', 'edit-button')
-                     .attr('x', centroid[0] + 40)
-                     .attr('y', centroid[1] - 10)
-                     .attr('fill', 'blue')
-                     .attr('font-size', '14px')
-                     .style('cursor', 'pointer')
-                     .style('pointer-events', 'all')
-                     .style('user-select', 'none')
-                     .text('✎')
-                     .on('mousedown', (event: MouseEvent) => {
-                        event.preventDefault();
-                        event.stopPropagation();
-                        setShowPopup(true);
-                     });
-               }
+                  .text('✎')
+                  .on('mousedown', (event: MouseEvent) => {
+                     event.preventDefault();
+                     event.stopPropagation();
+                     setShowPopup(true);
+                  });
             }
          });
 
@@ -427,15 +392,8 @@ export default function Polygon({
    // Add new function to handle polygon selection
    const handlePolygonClick = (label: string) => {
       if (isDrawing) return; // Prevent selection during drawing mode
-      console.log('handlePolygonClick', label);
+      console.log('Polygon Click', label);
       setSelectedPolygon(label === selectedPolygon ? null : label);
-   };
-
-   // Add new function to handle label input changes
-   const handleLabelChange = (label: string, newValue: string) => {
-      console.log('handleLabelChange', label, newValue);
-      setPolygons(polygons.map((p) => (p.label === label ? { ...p, label: newValue } : p)));
-      setEditingLabel(null);
    };
 
    // Add new function to handle polygon updates
