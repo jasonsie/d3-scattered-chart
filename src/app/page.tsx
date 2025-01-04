@@ -5,7 +5,7 @@ export default function Home() {
    return (
       <div className={styles.page}>
          <main className={styles.main}>
-            <div>Brush Example</div>
+            <div>Cell Distribution (CD45+)</div>
             <Chart />
          </main>
       </div>
