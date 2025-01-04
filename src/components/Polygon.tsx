@@ -6,15 +6,15 @@ import PopupEditor from './PopupEditor';
 
 export interface PolygonProps {
    g: d3.Selection<SVGGElement, unknown, null, undefined>;
-   onSelectionChange?: (selectedPoints: Array<{ x: number; y: number }>) => void;
-   data: Array<{ x: number; y: number }>;
+   onSelectionChange?: (selectedPoints: Array<Point>) => void;
+   data: Array<Point>;
    xScale: d3.ScaleLinear<number, number>;
    yScale: d3.ScaleLinear<number, number>;
    margin: { top: number; right: number; bottom: number; left: number };
 }
 
 export type Point = { x: number; y: number };
-export type Polygon = { label: string; points: Point[]; color?: string };
+export type Polygon = { id: number; label: string; points: Point[]; color?: string };
 /**
  * Polygon Component
  *
@@ -35,13 +35,18 @@ export default function Polygon({
    yScale,
    margin,
 }: PolygonProps) {
-   // State for managing current and completed polygons
-   const [isDrawing, setIsDrawing] = useState(false);
-   const [currentPoints, setCurrentPoints] = useState<Point[]>([]);
+   /*
+      State for managing current and completed polygons
+         1. polygons: Array of completed polygons
+         2. currentPoints: Array of points currently being drawn
+         3. selectedPolygon: Label of the currently selected polygon
+         4. isDrawing: Boolean indicating if a polygon is currently being drawn
+         5. showPopup: Boolean indicating if the popup editor is shown
+   */
    const [polygons, setPolygons] = useState<Polygon[]>([]);
-
-   // Add new state for selected polygon and editing
-   const [selectedPolygon, setSelectedPolygon] = useState<string | null>(null);
+   const [currentPoints, setCurrentPoints] = useState<Point[]>([]);
+   const [selectedPolygonId, setSelectedPolygonId] = useState<number | null>(null);
+   const [isDrawing, setIsDrawing] = useState(false);
    const [showPopup, setShowPopup] = useState(false);
 
    useEffect(() => {
@@ -61,7 +66,7 @@ export default function Polygon({
 
       // Cleanup
       return () => cleanupDrawing(svg, drawingGroup);
-   }, [g, currentPoints, isDrawing, onSelectionChange, polygons, selectedPolygon]);
+   }, [g, currentPoints, isDrawing, onSelectionChange, polygons, selectedPolygonId]);
 
    // Setup Functions
    const setupDrawingGroup = () => {
@@ -133,13 +138,13 @@ export default function Polygon({
    };
 
    // Polygon Drawing Logic
-   const startNewPolygon = (point: { x: number; y: number }) => {
+   const startNewPolygon = (point: Point) => {
       setIsDrawing(true);
       setCurrentPoints([point]);
-      setSelectedPolygon(null);
+      setSelectedPolygonId(null);
    };
 
-   const continueOrFinishPolygon = (point: { x: number; y: number }) => {
+   const continueOrFinishPolygon = (point: Point) => {
       const startPoint = currentPoints[0];
       const distance = Math.hypot(startPoint.x - point.x, startPoint.y - point.y);
 
@@ -153,6 +158,7 @@ export default function Polygon({
    const finishPolygon = () => {
       setIsDrawing(false);
       const newPolygon: Polygon = {
+         id: polygons.length + 1,
          label: `Group-${polygons.length + 1}`,
          points: currentPoints,
       };
@@ -209,7 +215,7 @@ export default function Polygon({
             return 'rgba(128, 128, 128, 0.1)';
          })
          .attr('stroke', (d) => {
-            if (d.label === selectedPolygon) {
+            if (d.id === selectedPolygonId) {
                return 'rgba(255, 0, 0, 0.5)';
             }
             if (d.color) {
@@ -221,7 +227,7 @@ export default function Polygon({
          .attr('d', (d) => lineGenerator(d.points) + 'Z')
          .on('mousedown', (event: MouseEvent, d) => {
             event.stopPropagation();
-            handlePolygonClick(d.label);
+            handlePolygonClick(d.id);
          });
 
       // Update labels with editing functionality
@@ -277,7 +283,7 @@ export default function Polygon({
                .text((d) => `n = ${countPointsInPolygon(d.points)}`);
 
             // Add edit button if polygon is selected
-            if (d.label === selectedPolygon) {
+            if (d.id === selectedPolygonId) {
                labelGroup
                   .selectAll('text.edit-button')
                   .data([d])
@@ -390,16 +396,16 @@ export default function Polygon({
    };
 
    // Add new function to handle polygon selection
-   const handlePolygonClick = (label: string) => {
+   const handlePolygonClick = (id: number) => {
       if (isDrawing) return; // Prevent selection during drawing mode
-      console.log('Polygon Click', label);
-      setSelectedPolygon(label === selectedPolygon ? null : label);
+      console.log('Polygon Click', id);
+      setSelectedPolygonId(id === selectedPolygonId ? null : id);
    };
 
    // Add new function to handle polygon updates
-   const handlePolygonUpdate = (label: string, newLabel: string, newColor: string) => {
+   const handlePolygonUpdate = (id: number, newLabel: string, newColor: string) => {
       setPolygons(
-         polygons.map((p) => (p.label === label ? { ...p, label: newLabel, color: newColor } : p))
+         polygons.map((p) => (p.id === id ? { ...p, label: newLabel, color: newColor } : p))
       );
       setShowPopup(false);
    };
@@ -415,12 +421,12 @@ export default function Polygon({
 
    return (
       <>
-         {showPopup && selectedPolygon && (
+         {showPopup && selectedPolygonId && (
             <PopupEditor
-               label={polygons.find((p) => p.label === selectedPolygon)?.label || ''}
-               color={polygons.find((p) => p.label === selectedPolygon)?.color || '#ffa500'}
+               label={polygons.find((p) => p.id === selectedPolygonId)?.label || ''}
+               color={polygons.find((p) => p.id === selectedPolygonId)?.color || '#ffa500'}
                onSave={(newLabel, newColor) =>
-                  handlePolygonUpdate(selectedPolygon, newLabel, newColor)
+                  handlePolygonUpdate(selectedPolygonId, newLabel, newColor)
                }
                onClose={() => setShowPopup(false)}
             />
