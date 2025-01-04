@@ -24,7 +24,7 @@ export interface ChartProps {
  * @param {number} width
  * @param {number} height
  */
-export default function Chart({ width = 1000, height = 800 }: ChartProps) {
+export default function Chart({ width = 600, height = 600 }: ChartProps) {
    // Refs and State
    const svgRef = useRef<SVGSVGElement>(null);
    const [data, setData] = useState<CellData[]>([]);
@@ -36,14 +36,15 @@ export default function Chart({ width = 1000, height = 800 }: ChartProps) {
       undefined
    > | null>(null);
 
-   // New state for scales
-   const [xScale, setXScale] = useState<d3.ScaleLinear<number, number> | null>(null);
-   const [yScale, setYScale] = useState<d3.ScaleLinear<number, number> | null>(null);
-
    // Chart dimensions
    const margin = { top: 2, right: 2, bottom: 2, left: 2 };
    const innerWidth = width - margin.left - margin.right;
    const innerHeight = height - margin.top - margin.bottom;
+
+   // New state for scales
+   // Create scales with actual data ranges
+   const x = d3.scaleLinear().domain([200, 1000]).range([0, innerWidth]);
+   const y = d3.scaleLinear().domain([0, 1000]).range([innerHeight, 0]);
 
    // Replace random data initialization with CSV loading
    useEffect(() => {
@@ -57,19 +58,6 @@ export default function Chart({ width = 1000, height = 800 }: ChartProps) {
    // Setup D3 chart
    useEffect(() => {
       if (!svgRef.current || !data.length) return;
-
-      // Create scales with actual data ranges
-      const x = d3.scaleLinear()
-         .domain([d3.min(data, d => d.x) || 0, d3.max(data, d => d.x) || 1000])
-         .range([0, innerWidth]);
-
-      const y = d3.scaleLinear()
-         .domain([d3.min(data, d => d.y) || 0, d3.max(data, d => d.y) || 1000])
-         .range([innerHeight, 0]);
-
-      // Set scales in state
-      setXScale(x);
-      setYScale(y);
 
       // Setup SVG container
       const svg = setupSVG();
@@ -135,10 +123,7 @@ export default function Chart({ width = 1000, height = 800 }: ChartProps) {
          .text('CD45-KrO');
 
       // Add Y axis with class name
-      const yAxis = g
-         .append('g')
-         .attr('class', styles['y-axis'])
-         .call(d3.axisLeft(y));
+      const yAxis = g.append('g').attr('class', styles['y-axis']).call(d3.axisLeft(y));
 
       // Add Y axis label
       yAxis
@@ -174,13 +159,13 @@ export default function Chart({ width = 1000, height = 800 }: ChartProps) {
          {data.length > 0 ? (
             <>
                <svg ref={svgRef} />
-               {groupSelection && xScale && yScale && (
+               {groupSelection && (
                   <Polygon
                      g={groupSelection}
                      onSelectionChange={setSelectedPoints}
                      data={data}
-                     xScale={xScale}
-                     yScale={yScale}
+                     xScale={x}
+                     yScale={y}
                      margin={margin}
                   />
                )}
@@ -191,43 +176,3 @@ export default function Chart({ width = 1000, height = 800 }: ChartProps) {
       </div>
    );
 }
-
-// const addGridLines = (
-//    g: d3.Selection<SVGGElement, unknown, null, undefined>,
-//    x: d3.ScaleLinear<number, number>,
-//    y: d3.ScaleLinear<number, number>
-// ) => {
-//    // Add X grid lines
-//    g.append('g')
-//       .attr('class', 'grid')
-//       .selectAll('line')
-//       .data(x.ticks())
-//       .join('line')
-//       .attr('x1', (d) => x(d))
-//       .attr('x2', (d) => x(d))
-//       .attr('y1', 0)
-//       .attr('y2', innerHeight)
-//       .attr('stroke', '#e0e0e0')
-//       .attr('stroke-width', 0.5);
-
-//    // Add Y grid lines
-//    g.append('g')
-//       .attr('class', 'grid')
-//       .selectAll('line')
-//       .data(y.ticks())
-//       .join('line')
-//       .attr('x1', 0)
-//       .attr('x2', innerWidth)
-//       .attr('y1', (d) => y(d))
-//       .attr('y2', (d) => y(d))
-//       .attr('stroke', '#e0e0e0')
-//       .attr('stroke-width', 0.5);
-// };
-
-// const addBackgroundRect = (g: d3.Selection<SVGGElement, unknown, null, undefined>) => {
-//    g.append('rect')
-//       .attr('width', innerWidth)
-//       .attr('height', innerHeight)
-//       .attr('fill', 'none')
-//       .attr('pointer-events', 'all');
-// };
