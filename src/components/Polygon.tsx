@@ -293,7 +293,7 @@ export default function Polygon({
                   .join('text')
                   .attr('class', 'polygon-label')
                   .attr('x', centroid[0])
-                  .attr('y', centroid[1])
+                  .attr('y', centroid[1] - 10)
                   .attr('text-anchor', 'middle')
                   .attr('dominant-baseline', 'middle')
                   .attr('fill', 'black')
@@ -304,6 +304,23 @@ export default function Polygon({
                   .style('-moz-user-select', 'none')
                   .text(d.label);
 
+               // Add count text
+               labelGroup
+                  .selectAll('text.count-label')
+                  .data([d])
+                  .join('text')
+                  .attr('class', 'count-label')
+                  .attr('x', centroid[0])
+                  .attr('y', centroid[1] + 10)
+                  .attr('text-anchor', 'middle')
+                  .attr('dominant-baseline', 'middle')
+                  .attr('fill', 'black')
+                  .attr('font-size', '12px')
+                  .style('user-select', 'none')
+                  .style('-webkit-user-select', 'none')
+                  .style('-moz-user-select', 'none')
+                  .text(d => `n = ${countPointsInPolygon(d.points)}`);
+
                // Add edit button if polygon is selected
                if (d.label === selectedPolygon) {
                   labelGroup
@@ -312,7 +329,7 @@ export default function Polygon({
                      .join('text')
                      .attr('class', 'edit-button')
                      .attr('x', centroid[0] + 40)
-                     .attr('y', centroid[1])
+                     .attr('y', centroid[1] - 10)
                      .attr('fill', 'blue')
                      .attr('font-size', '14px')
                      .style('cursor', 'pointer')
@@ -438,6 +455,15 @@ export default function Polygon({
          polygons.map((p) => (p.label === label ? { ...p, label: newLabel, color: newColor } : p))
       );
       setShowPopup(false);
+   };
+
+   // Add this function to calculate points within a polygon
+   const countPointsInPolygon = (points: Point[]) => {
+      const pointsArray = points.map((p) => [p.x, p.y] as [number, number]);
+      return data.filter((d) => {
+         const testPoint: [number, number] = [xScale(d.x), yScale(d.y)];
+         return d3.polygonContains(pointsArray, testPoint);
+      }).length;
    };
 
    return (
