@@ -23,7 +23,8 @@ type ChartAction =
    | { type: 'SET_SELECTED_POLYGON'; id: number | null }
    | { type: 'SET_SHOW_POPUP'; show: boolean }
    | { type: 'SET_LOADING'; loading: boolean }
-   | { type: 'SET_DRAWING'; isDrawing: boolean };
+   | { type: 'SET_DRAWING'; isDrawing: boolean }
+   | { type: 'DELETE_POLYGON'; id: number };
 
 /**
  * Initial state
@@ -74,6 +75,12 @@ function chartReducer(state: ChartState, action: ChartAction): ChartState {
          return { ...state, showPopup: action.show };
       case 'SET_LOADING':
          return { ...state, loading: action.loading };
+      case 'DELETE_POLYGON':
+         return {
+            ...state,
+            polygons: state.polygons.filter(p => p.id !== action.id),
+            selectedPolygonId: null
+         };
       default:
          return state;
    }

@@ -136,7 +136,7 @@ export default function Polygon({ g, data, xScale, yScale, margin }: PolygonProp
 
       if (distance < 10 && currentPoints.length > 2) {
          const newPolygon: Polygon = {
-            id: polygons.length + 1,
+            id: Date.now(),
             label: `Group-${polygons.length + 1}`,
             points: currentPoints,
          };
@@ -269,9 +269,9 @@ export default function Polygon({ g, data, xScale, yScale, margin }: PolygonProp
                   .data([d])
                   .join('text')
                   .attr('class', 'edit-button')
-                  .attr('x', centroid[0] + 40)
-                  .attr('y', centroid[1] - 10)
-                  .attr('fill', 'blue')
+                  .attr('x', centroid[0] + 35)
+                  .attr('y', centroid[1] - 6)
+                  .attr('fill', 'black')
                   .attr('font-size', '14px')
                   .style('cursor', 'pointer')
                   .style('pointer-events', 'all')
@@ -281,6 +281,29 @@ export default function Polygon({ g, data, xScale, yScale, margin }: PolygonProp
                      event.preventDefault();
                      event.stopPropagation();
                      dispatch({ type: 'SET_SHOW_POPUP', show: true });
+                  });
+            }
+
+            // Add delete button if polygon is selected
+            if (d.id === selectedPolygonId) {
+               labelGroup
+                  .selectAll('text.delete-button')
+                  .data([d])
+                  .join('text')
+                  .attr('class', 'delete-button')
+                  .attr('x', centroid[0] + 60)
+                  .attr('y', centroid[1] - 6)
+                  .attr('text-anchor', 'middle')
+                  .attr('fill', 'black')
+                  .attr('font-size', '16px')
+                  .style('cursor', 'pointer')
+                  .style('pointer-events', 'all')
+                  .style('user-select', 'none')
+                  .text('×')
+                  .on('mousedown', (event: MouseEvent) => {
+                     event.preventDefault();
+                     event.stopPropagation();
+                     dispatch({ type: 'DELETE_POLYGON', id: d.id });
                   });
             }
          });

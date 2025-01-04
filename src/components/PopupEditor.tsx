@@ -1,3 +1,5 @@
+'use client';
+
 interface PopupEditorProps {
   label: string;
   color: string;
