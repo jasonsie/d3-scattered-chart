@@ -150,7 +150,7 @@ export default function Chart({ width = 600, height = 600 }: ChartProps) {
          .attr('cx', (d) => x(d.x))
          .attr('cy', (d) => y(d.y))
          .attr('r', 2)
-         .attr('fill', (d) => (selectedPoints.includes(d) ? 'orange' : 'grey'))
+         .attr('fill', 'grey')
          .attr('fill-opacity', 0.1);
    };
 

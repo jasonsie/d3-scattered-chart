@@ -13,7 +13,7 @@ export const loadCsvData = async (): Promise<CellData[]> => {
             x: +d['CD45-KrO'],
             y: +d['SS INT LIN']
          }))
-         .slice(0, 1000);  // Limit to first 500 points
+         // .slice(0, 1000);  // Limit to first 500 points
    } catch (error) {
       console.error('Error loading CSV data:', error);
       return [];
