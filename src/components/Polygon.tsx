@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import * as d3 from 'd3';
+import PopupEditor from './PopupEditor';
 
 export interface PolygonProps {
    g: d3.Selection<SVGGElement, unknown, null, undefined>;
@@ -13,7 +14,7 @@ export interface PolygonProps {
 }
 
 export type Point = { x: number; y: number };
-export type Polygon = { label: string; points: Point[] };
+export type Polygon = { label: string; points: Point[]; color?: string };
 /**
  * Polygon Component
  *
@@ -41,6 +42,7 @@ export default function Polygon({
    // Add new state for selected polygon and editing
    const [selectedPolygon, setSelectedPolygon] = useState<string | null>(null);
    const [editingLabel, setEditingLabel] = useState<string | null>(null);
+   const [showPopup, setShowPopup] = useState(false);
 
    useEffect(() => {
       const drawingGroup = setupDrawingGroup();
@@ -59,7 +61,18 @@ export default function Polygon({
 
       // Cleanup
       return () => cleanupDrawing(svg, drawingGroup);
-   }, [g, currentPoints, polygons, isDrawing, onSelectionChange, data, xScale, yScale, margin, selectedPolygon]);
+   }, [
+      g,
+      currentPoints,
+      polygons,
+      isDrawing,
+      onSelectionChange,
+      data,
+      xScale,
+      yScale,
+      margin,
+      selectedPolygon,
+   ]);
 
    // Setup Functions
    const setupDrawingGroup = () => {
@@ -185,19 +198,36 @@ export default function Polygon({
          .style('pointer-events', 'all')
          .style('cursor', 'pointer');
 
-      // Modify polygon paths
+      // Helper function to convert hex to rgba with opacity
+      const hexToRgba = (hex: string, opacity: number) => {
+         const r = parseInt(hex.slice(1, 3), 16);
+         const g = parseInt(hex.slice(3, 5), 16);
+         const b = parseInt(hex.slice(5, 7), 16);
+         return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+      };
+
+      // Modify polygon paths color handling
       polygonGroups
          .selectAll('path.finished-polygon')
          .data((d) => [d])
          .join('path')
          .attr('class', 'finished-polygon')
-         .style('pointer-events', () => isDrawing ? 'none' : 'all')
-         .attr('fill', (d) =>
-            d.label === selectedPolygon ? 'rgba(255, 165, 0, 0.2)' : 'rgba(128, 128, 128, 0.1)'
-         )
-         .attr('stroke', (d) =>
-            d.label === selectedPolygon ? 'rgba(255, 165, 0, 0.5)' : 'rgba(128, 128, 128, 0.2)'
-         )
+         .style('pointer-events', () => (isDrawing ? 'none' : 'all'))
+         .attr('fill', (d) => {
+            if (d.color) {
+               return hexToRgba(d.color, 0.1);
+            }
+            return 'rgba(128, 128, 128, 0.1)';
+         })
+         .attr('stroke', (d) => {
+            if (d.label === selectedPolygon) {
+               return 'rgba(255, 0, 0, 0.5)';
+            }
+            if (d.color) {
+               return hexToRgba(d.color, 0.5);
+            }
+            return 'rgba(128, 128, 128, 0.2)';
+         })
          .attr('stroke-width', 2)
          .attr('d', (d) => lineGenerator(d.points) + 'Z')
          .on('mousedown', (event: MouseEvent, d) => {
@@ -250,8 +280,15 @@ export default function Polygon({
                   });
             } else {
                // Show regular text when not editing
-               container
-                  .selectAll('text')
+               const labelGroup = container
+                  .selectAll('g.label-group')
+                  .data([d])
+                  .join('g')
+                  .attr('class', 'label-group');
+
+               // Add the label text
+               labelGroup
+                  .selectAll('text.polygon-label')
                   .data([d])
                   .join('text')
                   .attr('class', 'polygon-label')
@@ -265,8 +302,29 @@ export default function Polygon({
                   .style('user-select', 'none')
                   .style('-webkit-user-select', 'none')
                   .style('-moz-user-select', 'none')
-                  .text(d.label)
-                  .on('dblclick', (event, d) => handleLabelDoubleClick(event, d.label));
+                  .text(d.label);
+
+               // Add edit button if polygon is selected
+               if (d.label === selectedPolygon) {
+                  labelGroup
+                     .selectAll('text.edit-button')
+                     .data([d])
+                     .join('text')
+                     .attr('class', 'edit-button')
+                     .attr('x', centroid[0] + 40)
+                     .attr('y', centroid[1])
+                     .attr('fill', 'blue')
+                     .attr('font-size', '14px')
+                     .style('cursor', 'pointer')
+                     .style('pointer-events', 'all')
+                     .style('user-select', 'none')
+                     .text('✎')
+                     .on('mousedown', (event: MouseEvent) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        setShowPopup(true);
+                     });
+               }
             }
          });
 
@@ -367,13 +425,6 @@ export default function Polygon({
       setSelectedPolygon(label === selectedPolygon ? null : label);
    };
 
-   // Add new function to handle label editing
-   const handleLabelDoubleClick = (event: MouseEvent, label: string) => {
-      console.log('handleLabelDoubleClick', label);
-      event.stopPropagation();
-      setEditingLabel(label);
-   };
-
    // Add new function to handle label input changes
    const handleLabelChange = (label: string, newValue: string) => {
       console.log('handleLabelChange', label, newValue);
@@ -381,5 +432,26 @@ export default function Polygon({
       setEditingLabel(null);
    };
 
-   return null;
+   // Add new function to handle polygon updates
+   const handlePolygonUpdate = (label: string, newLabel: string, newColor: string) => {
+      setPolygons(
+         polygons.map((p) => (p.label === label ? { ...p, label: newLabel, color: newColor } : p))
+      );
+      setShowPopup(false);
+   };
+
+   return (
+      <>
+         {showPopup && selectedPolygon && (
+            <PopupEditor
+               label={polygons.find((p) => p.label === selectedPolygon)?.label || ''}
+               color={polygons.find((p) => p.label === selectedPolygon)?.color || '#ffa500'}
+               onSave={(newLabel, newColor) =>
+                  handlePolygonUpdate(selectedPolygon, newLabel, newColor)
+               }
+               onClose={() => setShowPopup(false)}
+            />
+         )}
+      </>
+   );
 }
