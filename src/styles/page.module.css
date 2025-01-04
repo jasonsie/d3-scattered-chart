@@ -1,37 +1,42 @@
 .page {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+   display: flex;
+   flex-direction: column;
+   min-height: 100vh;
+   padding: 20px;
 }
 
 .main {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  gap: 0.5rem;
+   flex: 1;
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+   gap: 20px;
+}
+
+.title {
+   font-size: 24px;
+   font-weight: bold;
+   color: #333;
+   margin-bottom: 20px;
 }
 
 /* Add these styles to prevent axis selection */
 .x-axis,
 .y-axis {
-  pointer-events: none;
+   pointer-events: none;
 }
 
 .x-axis path,
 .y-axis path,
 .x-axis line,
 .y-axis line {
-  stroke: #666;
-  pointer-events: none;
+   stroke: #666;
+   pointer-events: none;
 }
 
 .x-axis text,
 .y-axis text {
-  fill: #666;
-  font-size: 12px;
-  pointer-events: none;
+   fill: #666;
+   font-size: 12px;
+   pointer-events: none;
 }
-
