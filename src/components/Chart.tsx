@@ -25,7 +25,7 @@ export interface ChartProps {
  * @param {number} width
  * @param {number} height
  */
-export default function Chart({ width = 600, height = 600 }: ChartProps) {
+export default function Chart({ width = 800, height = 600 }: ChartProps) {
    // Refs and State
    const svgRef = useRef<SVGSVGElement>(null);
    const { data, loading } = useChartState();
@@ -102,9 +102,9 @@ export default function Chart({ width = 600, height = 600 }: ChartProps) {
          .attr('class', 'data-point')
          .attr('cx', (d) => x(d.x))
          .attr('cy', (d) => y(d.y))
-         .attr('r', 2)
-         .attr('fill', 'grey')
-         .attr('fill-opacity', 0.1);
+         .attr('r', 1)
+         .attr('fill', 'white')
+         .attr('fill-opacity', 0.4);
 
       setGroupSelection(g);
 

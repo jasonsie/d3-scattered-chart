@@ -70,9 +70,9 @@ export default function Polygon({ g, data, xScale, yScale, margin }: PolygonProp
       const polygon = drawingGroup
          .append('path')
          .attr('class', 'polygon')
-         .attr('fill', 'rgba(128, 128, 128, 0.2)') // grey with 0.1 opacity
-         .attr('stroke', 'rgba(128, 128, 128, 0.5)') // grey with 0.2 opacity
-         .attr('stroke-width', 2);
+         .attr('fill', 'rgba(128, 128, 128, 0.4)') // grey with 0.1 opacity
+         .attr('stroke', 'rgba(128, 128, 128, 0.8)') // grey with 0.2 opacity
+         .attr('stroke-width', 1);
 
       // Preview line while drawing
       drawingGroup
@@ -192,7 +192,7 @@ export default function Polygon({ g, data, xScale, yScale, margin }: PolygonProp
             if (d.color) {
                return hexToRgba(d.color, 0.1);
             }
-            return 'rgba(128, 128, 128, 0.1)';
+            return 'rgba(128, 128, 128, 0.4)';
          })
          .attr('stroke', (d) => {
             if (d.id === selectedPolygonId) {
@@ -201,9 +201,9 @@ export default function Polygon({ g, data, xScale, yScale, margin }: PolygonProp
             if (d.color) {
                return hexToRgba(d.color, 0.5);
             }
-            return 'rgba(128, 128, 128, 0.2)';
+            return 'rgba(128, 128, 128, 0.4)';
          })
-         .attr('stroke-width', 1)
+         .attr('stroke-width', 2)
          .attr('d', (d) => lineGenerator(d.points) + 'Z')
          .on('mousedown', (event: MouseEvent, d) => {
             event.stopPropagation();
@@ -361,7 +361,7 @@ export default function Polygon({ g, data, xScale, yScale, margin }: PolygonProp
          .attr('cx', (d) => d.x)
          .attr('cy', (d) => d.y)
          .attr('r', 4)
-         .attr('fill', 'black') // Changed to black
+         .attr('fill', 'white') // Changed to black
          .attr('fill-opacity', '0.8') // Set opacity to 0.8
          .attr('stroke', 'none') // Removed stroke
          .attr('is-handle', 'true')
