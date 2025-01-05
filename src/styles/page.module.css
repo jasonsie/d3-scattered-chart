@@ -13,11 +13,17 @@
    align-items: center;
    gap: 20px;
 }
+
 .chartContainer {
    display: flex;
    flex-direction: row;
    justify-content: center;
    gap: 20px;
+}
+
+.chartContainerLeft {
+   width: 800px;
+   height: 600px;
 }
 
 .title {

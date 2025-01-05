@@ -13,7 +13,7 @@ export default function Home() {
                <div className={styles.title}>Cell Distribution (CD45+)</div>
                <div className={styles.chartContainer}>
                   <Chart />
-                  {/* <Sidebar /> */}
+                  <Sidebar />
                </div>
             </main>
          </div>

@@ -115,7 +115,7 @@ export default function Chart({ width = 800, height = 600 }: ChartProps) {
    }, [data, width, height, innerWidth, innerHeight, margin.left, margin.top, margin.bottom]);
 
    return (
-      <div className={styles.container}>
+      <div className={styles.chartContainerLeft}>
          {loading ? (
             <div>Loading...</div>
          ) : (

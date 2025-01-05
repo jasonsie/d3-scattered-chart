@@ -1,56 +1,69 @@
 'use client';
 
-import React from 'react';
-import {
-   List,
-   ListItem,
-   IconButton,
-   Avatar,
-   ListItemAvatar,
-   ListItemText,
-   styled,
-} from '@mui/material';
+import * as React from 'react';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemButton from '@mui/material/ListItemButton';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import ListItemText from '@mui/material/ListItemText';
+import Checkbox from '@mui/material/Checkbox';
+import IconButton from '@mui/material/IconButton';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import DeleteIcon from '@mui/icons-material/Delete';
-import FolderIcon from '@mui/icons-material/Folder';
+import { useChartDispatch, useChartState } from '@contexts/ChartContext';
 
-function generate(element: React.ReactElement<unknown>) {
-   return [0, 1, 2].map((value) =>
-      React.cloneElement(element, {
-         key: value,
-      })
-   );
-}
+export default function Sidebar() {
+   const { polygons, selectedPolygonId } = useChartState();
+   const dispatch = useChartDispatch();
 
-const Demo = styled('div')(({ theme }) => ({
-   backgroundColor: theme.palette.background.paper,
-}));
-
-const Sidebar = () => {
-   const [dense, setDense] = React.useState(false);
-   const [secondary, setSecondary] = React.useState(false);
+   const handleToggle = (id: number) => () => {
+      dispatch({ type: 'SET_SELECTED_POLYGON', id });
+   };
 
    return (
-      <>
-         <Demo>
-            <List>
-               {generate(
-                  <ListItem
-                     secondaryAction={
-                        <IconButton edge="end" aria-label="delete">
-                           <DeleteIcon />
-                        </IconButton>
+      <List sx={{ width: '100%', maxWidth: 360, bgcolor: 'background.paper' }}>
+         {polygons.map((polygon) => {
+            const labelId = `checkbox-list-label-${polygon.id}`;
+
+            return (
+               <ListItem
+                  key={polygon.id}
+                  secondaryAction={
+                     <IconButton
+                        edge="end"
+                        aria-label="comments"
+                        onClick={() => dispatch({ type: 'DELETE_POLYGON', id: polygon.id })}
+                     >
+                        <DeleteIcon />
+                     </IconButton>
+                  }
+                  disablePadding
+               >
+                  <ListItemButton onClick={handleToggle(polygon.id)} >
+                     <Checkbox
+                        edge="start"
+                        checked={selectedPolygonId.includes(polygon.id)}
+                        tabIndex={-1}
+                        disableRipple
+                        inputProps={{ 'aria-labelledby': labelId }}
+                     />
+                  </ListItemButton>
+                  <ListItemText id={labelId} primary={`${polygon.label}`} />
+                  <ListItemIcon
+                     onClick={() =>
+                        dispatch({
+                           type: 'UPDATE_POLYGON',
+                           id: polygon.id,
+                           isVisible: !polygon.isVisible,
+                        })
                      }
                   >
-                     <ListItemText
-                        primary="Single-line item"
-                        secondary={secondary ? 'Secondary text' : null}
-                     />
-                  </ListItem>
-               )}
-            </List>
-         </Demo>
-      </>
+                     {polygon.isVisible ? <VisibilityIcon /> : <VisibilityOffIcon />}
+                  </ListItemIcon>
+               </ListItem>
+            );
+         })}
+      </List>
    );
-};
-
-export default Sidebar;
+}

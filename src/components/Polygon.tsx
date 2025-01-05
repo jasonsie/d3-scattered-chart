@@ -15,7 +15,14 @@ export interface PolygonProps {
 }
 
 export type Point = { x: number; y: number };
-export type Polygon = { id: number; label: string; points: Point[]; color?: string };
+export type Polygon = {
+   id: number;
+   label: string;
+   points: Point[];
+   color?: string;
+   line?: string;
+   isVisible: boolean;
+};
 /**
  * Polygon Component
  *
@@ -126,7 +133,7 @@ export default function Polygon({ g, data, xScale, yScale, margin }: PolygonProp
       if (dispatch) {
          dispatch({ type: 'SET_DRAWING', isDrawing: true });
          dispatch({ type: 'SET_CURRENT_POINTS', points: [point] });
-         dispatch({ type: 'SET_SELECTED_POLYGON', id: null });
+         // dispatch({ type: 'SET_SELECTED_POLYGON', id: [] });
       }
    };
 
@@ -139,6 +146,7 @@ export default function Polygon({ g, data, xScale, yScale, margin }: PolygonProp
             id: Date.now(),
             label: `Group-${polygons.length + 1}`,
             points: currentPoints,
+            isVisible: true,
          };
          dispatch({ type: 'SET_DRAWING', isDrawing: false });
          dispatch({ type: 'SET_POLYGONS', polygons: [...polygons, newPolygon] });
@@ -171,7 +179,8 @@ export default function Polygon({ g, data, xScale, yScale, margin }: PolygonProp
          .join('g')
          .attr('class', 'polygon-group')
          .style('pointer-events', 'all')
-         .style('cursor', 'pointer');
+         .style('cursor', 'pointer')
+         .style('display', d => d.isVisible ? 'block' : 'none');
 
       // Helper function to convert hex to rgba with opacity
       const hexToRgba = (hex: string, opacity: number) => {
@@ -195,7 +204,7 @@ export default function Polygon({ g, data, xScale, yScale, margin }: PolygonProp
             return 'rgba(128, 128, 128, 0.4)';
          })
          .attr('stroke', (d) => {
-            if (d.id === selectedPolygonId) {
+            if (selectedPolygonId.includes(d.id)) {
                return 'rgba(255, 0, 0, 0.5)';
             }
             if (d.color) {
@@ -263,7 +272,7 @@ export default function Polygon({ g, data, xScale, yScale, margin }: PolygonProp
                .text((d) => `n = ${countPointsInPolygon(d.points)}`);
 
             // Add edit button if polygon is selected
-            if (d.id === selectedPolygonId) {
+            if (selectedPolygonId.includes(d.id)) {
                labelGroup
                   .selectAll('text.edit-button')
                   .data([d])
@@ -277,15 +286,18 @@ export default function Polygon({ g, data, xScale, yScale, margin }: PolygonProp
                   .style('pointer-events', 'all')
                   .style('user-select', 'none')
                   .text('✎')
-                  .on('mousedown', (event: MouseEvent) => {
+                  .on('mousedown', (event: MouseEvent, d) => {
                      event.preventDefault();
                      event.stopPropagation();
-                     dispatch({ type: 'SET_SHOW_POPUP', show: true });
+                     dispatch({ 
+                        type: 'SET_SHOW_POPUP', 
+                        show: { id: d.id, value: true }
+                     });
                   });
             }
 
             // Add delete button if polygon is selected
-            if (d.id === selectedPolygonId) {
+            if (selectedPolygonId.includes(d.id)) {
                labelGroup
                   .selectAll('text.delete-button')
                   .data([d])
@@ -390,7 +402,12 @@ export default function Polygon({ g, data, xScale, yScale, margin }: PolygonProp
    // Add new function to handle polygon selection
    const handlePolygonClick = (id: number) => {
       if (isDrawing) return;
-      dispatch({ type: 'SET_SELECTED_POLYGON', id: id === selectedPolygonId ? null : id });
+      // const isSelected = selectedPolygonId.includes(id);
+      
+      dispatch({ 
+         type: 'SET_SELECTED_POLYGON', 
+         id:  id  // Keep the null for removing selection
+      });
    };
 
    // Add new function to handle polygon updates
@@ -401,7 +418,10 @@ export default function Polygon({ g, data, xScale, yScale, margin }: PolygonProp
          newLabel,
          newColor,
       });
-      dispatch({ type: 'SET_SHOW_POPUP', show: false });
+      dispatch({ 
+         type: 'SET_SHOW_POPUP', 
+         show: { id: null, value: false } 
+      });
    };
 
    // Add this function to calculate points within a polygon
@@ -415,14 +435,17 @@ export default function Polygon({ g, data, xScale, yScale, margin }: PolygonProp
 
    return (
       <>
-         {showPopup && selectedPolygonId && (
+         {showPopup.value && (
             <PopupEditor
-               label={polygons.find((p) => p.id === selectedPolygonId)?.label || ''}
-               color={polygons.find((p) => p.id === selectedPolygonId)?.color || '#ffa500'}
+               label={polygons.find((p) => p.id === showPopup.id)?.label || ''}
+               color={polygons.find((p) => p.id === showPopup.id)?.color || '#ffa500'}
                onSave={(newLabel, newColor) =>
-                  handlePolygonUpdate(selectedPolygonId, newLabel, newColor)
+                  handlePolygonUpdate(showPopup.id, newLabel, newColor)
                }
-               onClose={() => dispatch({ type: 'SET_SHOW_POPUP', show: false })}
+               onClose={() => dispatch({ 
+                  type: 'SET_SHOW_POPUP', 
+                  show: { id: null, value: false } 
+               })}
             />
          )}
       </>
