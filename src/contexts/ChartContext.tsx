@@ -3,6 +3,7 @@
 import { createContext, useContext, useReducer, ReactNode, useEffect } from 'react';
 import { CellData, loadCsvData } from '@/utils/data/loadCsvData';
 import { Point, Polygon } from '@/components/Polygon';
+import * as d3 from 'd3';
 
 // Types
 type ShowPopup = 
@@ -17,6 +18,10 @@ interface ChartState {
    showPopup: ShowPopup;
    loading: boolean;
    checkedPolygons: number[];
+   scales: {
+      xScale: d3.ScaleLinear<number, number>;
+      yScale: d3.ScaleLinear<number, number>;
+   } | null;
 }
 
 
@@ -37,7 +42,8 @@ type ChartAction =
    | { type: 'SET_SHOW_POPUP'; show: ShowPopup }
    | { type: 'SET_LOADING'; loading: boolean }
    | { type: 'SET_DRAWING'; isDrawing: boolean }
-   | { type: 'DELETE_POLYGON'; id: number };
+   | { type: 'DELETE_POLYGON'; id: number }
+   | { type: 'SET_SCALES'; scales: { xScale: d3.ScaleLinear<number, number>; yScale: d3.ScaleLinear<number, number> } };
 
 /**
  * Initial state
@@ -57,6 +63,7 @@ const initialState: ChartState = {
    showPopup: { id: null, value: false },
    loading: true,
    checkedPolygons: [],
+   scales: null,
 };
 
 // Context creation
@@ -109,6 +116,8 @@ function chartReducer(state: ChartState, action: ChartAction): ChartState {
             polygons: state.polygons.filter((p) => p.id !== action.id),
             selectedPolygonId: state.selectedPolygonId.filter((id) => id !== action.id),
          };
+      case 'SET_SCALES':
+         return { ...state, scales: action.scales };
       default:
          return state;
    }

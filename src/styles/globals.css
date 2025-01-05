@@ -14,3 +14,7 @@ text {
    -webkit-user-select: none;
    -moz-user-select: none;
 }
+
+p {
+   color: grey !important;
+}

@@ -19,9 +19,14 @@ export type Polygon = {
    id: number;
    label: string;
    points: Point[];
+   isVisible: boolean;
+   data: {
+      count: number;
+      percentage: number;
+   };
    color?: string;
    line?: string;
-   isVisible: boolean;
+   dot?: string;
 };
 /**
  * Polygon Component
@@ -137,16 +142,34 @@ export default function Polygon({ g, data, xScale, yScale, margin }: PolygonProp
       }
    };
 
+   const calculatePolygonStats = (points: Point[]) => {
+      const pointsArray = points.map((p) => [p.x, p.y] as [number, number]);
+      const pointsInPolygon = data.filter((d) => {
+         const testPoint: [number, number] = [xScale(d.x), yScale(d.y)];
+         return d3.polygonContains(pointsArray, testPoint);
+      });
+
+      return {
+         count: pointsInPolygon.length,
+         percentage: Number(((pointsInPolygon.length / data.length) * 100).toFixed(1))
+      };
+   };
+
    const continueOrFinishPolygon = (point: Point) => {
       const startPoint = currentPoints[0];
       const distance = Math.hypot(startPoint.x - point.x, startPoint.y - point.y);
 
       if (distance < 10 && currentPoints.length > 2) {
+         const stats = calculatePolygonStats(currentPoints);
          const newPolygon: Polygon = {
             id: Date.now(),
             label: `Group-${polygons.length + 1}`,
             points: currentPoints,
             isVisible: true,
+            data: {
+               count: stats.count,
+               percentage: stats.percentage
+            }
          };
          dispatch({ type: 'SET_DRAWING', isDrawing: false });
          dispatch({ type: 'SET_POLYGONS', polygons: [...polygons, newPolygon] });
@@ -180,7 +203,7 @@ export default function Polygon({ g, data, xScale, yScale, margin }: PolygonProp
          .attr('class', 'polygon-group')
          .style('pointer-events', 'all')
          .style('cursor', 'pointer')
-         .style('display', d => d.isVisible ? 'block' : 'none');
+         .style('display', (d) => (d.isVisible ? 'block' : 'none'));
 
       // Helper function to convert hex to rgba with opacity
       const hexToRgba = (hex: string, opacity: number) => {
@@ -199,20 +222,35 @@ export default function Polygon({ g, data, xScale, yScale, margin }: PolygonProp
          .style('pointer-events', () => (isDrawing ? 'none' : 'all'))
          .attr('fill', (d) => {
             if (d.color) {
-               return hexToRgba(d.color, 0.1);
+               return hexToRgba(d.color, 0.2);
             }
-            return 'rgba(128, 128, 128, 0.4)';
+            return 'rgba(128, 128, 128, 0.2)';
          })
          .attr('stroke', (d) => {
             if (selectedPolygonId.includes(d.id)) {
-               return 'rgba(255, 0, 0, 0.5)';
+               return 'rgba(255, 0, 0, 0.2)';
             }
             if (d.color) {
-               return hexToRgba(d.color, 0.5);
+               return hexToRgba(d.color, 0.4);
             }
             return 'rgba(128, 128, 128, 0.4)';
          })
-         .attr('stroke-width', 2)
+         .attr('stroke-width', (d) => {
+            if (selectedPolygonId.includes(d.id)) {
+               return 10;
+            }
+            return 3;
+         })
+         .style('stroke-dasharray', (d) => {
+            switch (d.line) {
+               case 'dashed':
+                  return '5,5';
+               case 'dotted':
+                  return '2,2';
+               default:
+                  return 'none';
+            }
+         })
          .attr('d', (d) => lineGenerator(d.points) + 'Z')
          .on('mousedown', (event: MouseEvent, d) => {
             event.stopPropagation();
@@ -246,7 +284,7 @@ export default function Polygon({ g, data, xScale, yScale, margin }: PolygonProp
                .attr('y', centroid[1] - 10)
                .attr('text-anchor', 'middle')
                .attr('dominant-baseline', 'middle')
-               .attr('fill', 'black')
+               .attr('fill', 'white')
                .attr('font-size', '14px')
                .attr('font-weight', 'bold')
                .style('user-select', 'none')
@@ -269,7 +307,7 @@ export default function Polygon({ g, data, xScale, yScale, margin }: PolygonProp
                .style('user-select', 'none')
                .style('-webkit-user-select', 'none')
                .style('-moz-user-select', 'none')
-               .text((d) => `n = ${countPointsInPolygon(d.points)}`);
+               .text((d) => `n = ${d.data.count} (${d.data.percentage}%)`);
 
             // Add edit button if polygon is selected
             if (selectedPolygonId.includes(d.id)) {
@@ -289,9 +327,9 @@ export default function Polygon({ g, data, xScale, yScale, margin }: PolygonProp
                   .on('mousedown', (event: MouseEvent, d) => {
                      event.preventDefault();
                      event.stopPropagation();
-                     dispatch({ 
-                        type: 'SET_SHOW_POPUP', 
-                        show: { id: d.id, value: true }
+                     dispatch({
+                        type: 'SET_SHOW_POPUP',
+                        show: { id: d.id, value: true },
                      });
                   });
             }
@@ -329,14 +367,14 @@ export default function Polygon({ g, data, xScale, yScale, margin }: PolygonProp
    ) => {
       groups
          .selectAll('circle.vertex')
-         .data((d) => d.points)
+         .data((d) => d.points.map((point) => ({ ...point, polygon: d })))
          .join('circle')
          .attr('class', 'vertex')
          .attr('cx', (d) => d.x)
          .attr('cy', (d) => d.y)
-         .attr('r', 4)
-         .attr('fill', 'black')
-         .attr('fill-opacity', '0.1')
+         .attr('r', 3)
+         .attr('fill', (d) => d.polygon.color || 'white')
+         .attr('fill-opacity', '0.2')
          .attr('stroke', 'none')
          .attr('is-handle', 'true')
          .style('cursor', 'pointer');
@@ -403,34 +441,33 @@ export default function Polygon({ g, data, xScale, yScale, margin }: PolygonProp
    const handlePolygonClick = (id: number) => {
       if (isDrawing) return;
       // const isSelected = selectedPolygonId.includes(id);
-      
-      dispatch({ 
-         type: 'SET_SELECTED_POLYGON', 
-         id:  id  // Keep the null for removing selection
+
+      dispatch({
+         type: 'SET_SELECTED_POLYGON',
+         id: id, // Keep the null for removing selection
       });
    };
 
    // Add new function to handle polygon updates
-   const handlePolygonUpdate = (id: number, newLabel: string, newColor: string) => {
+   const handlePolygonUpdate = (
+      id: number,
+      newLabel: string,
+      newColor: string,
+      newLine: string,
+      newDot: string
+   ) => {
       dispatch({
          type: 'UPDATE_POLYGON',
          id,
          newLabel,
          newColor,
+         line: newLine,
+         dot: newDot,
       });
-      dispatch({ 
-         type: 'SET_SHOW_POPUP', 
-         show: { id: null, value: false } 
+      dispatch({
+         type: 'SET_SHOW_POPUP',
+         show: { id: null, value: false },
       });
-   };
-
-   // Add this function to calculate points within a polygon
-   const countPointsInPolygon = (points: Point[]) => {
-      const pointsArray = points.map((p) => [p.x, p.y] as [number, number]);
-      return data.filter((d) => {
-         const testPoint: [number, number] = [xScale(d.x), yScale(d.y)];
-         return d3.polygonContains(pointsArray, testPoint);
-      }).length;
    };
 
    return (
@@ -438,14 +475,18 @@ export default function Polygon({ g, data, xScale, yScale, margin }: PolygonProp
          {showPopup.value && (
             <PopupEditor
                label={polygons.find((p) => p.id === showPopup.id)?.label || ''}
-               color={polygons.find((p) => p.id === showPopup.id)?.color || '#ffa500'}
-               onSave={(newLabel, newColor) =>
-                  handlePolygonUpdate(showPopup.id, newLabel, newColor)
+               color={polygons.find((p) => p.id === showPopup.id)?.color || '#808080'}
+               line={polygons.find((p) => p.id === showPopup.id)?.line || 'solid'}
+               dot={polygons.find((p) => p.id === showPopup.id)?.dot || '#ffffff'}
+               onSave={(newLabel, newColor, newLine, newDot) =>
+                  handlePolygonUpdate(showPopup.id, newLabel, newColor, newLine, newDot)
                }
-               onClose={() => dispatch({ 
-                  type: 'SET_SHOW_POPUP', 
-                  show: { id: null, value: false } 
-               })}
+               onClose={() =>
+                  dispatch({
+                     type: 'SET_SHOW_POPUP',
+                     show: { id: null, value: false },
+                  })
+               }
             />
          )}
       </>

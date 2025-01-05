@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import styles from '@styles/page.module.css';
 import Polygon from './Polygon';
-import { useChartState } from '@/contexts/ChartContext';
+import { useChartDispatch, useChartState } from '@/contexts/ChartContext';
 import { CellData } from '@utils/data/loadCsvData';
 
 export interface ChartProps {
@@ -28,7 +28,8 @@ export interface ChartProps {
 export default function Chart({ width = 800, height = 600 }: ChartProps) {
    // Refs and State
    const svgRef = useRef<SVGSVGElement>(null);
-   const { data, loading } = useChartState();
+   const { data, loading, polygons } = useChartState();
+   const dispatch = useChartDispatch();
    const [groupSelection, setGroupSelection] = useState<d3.Selection<
       SVGGElement,
       unknown,
@@ -103,16 +104,44 @@ export default function Chart({ width = 800, height = 600 }: ChartProps) {
          .attr('cx', (d) => x(d.x))
          .attr('cy', (d) => y(d.y))
          .attr('r', 1)
-         .attr('fill', 'white')
+         .attr('fill', (d) => {
+            // Check if point is inside any polygon and use that polygon's dot color
+            const point: [number, number] = [x(d.x), y(d.y)];
+            for (const polygon of polygons) {
+               if (
+                  polygon.isVisible &&
+                  d3.polygonContains(
+                     polygon.points.map((p) => [p.x, p.y]),
+                     point
+                  )
+               ) {
+                  return polygon.dot || 'white';
+               }
+            }
+            return 'white';
+         })
          .attr('fill-opacity', 0.4);
 
       setGroupSelection(g);
+
+      dispatch({ type: 'SET_SCALES', scales: { xScale: x, yScale: y } });
 
       return () => {
          svg.selectAll('*').remove();
          setGroupSelection(null);
       };
-   }, [data, width, height, innerWidth, innerHeight, margin.left, margin.top, margin.bottom]);
+   }, [
+      data,
+      width,
+      height,
+      innerWidth,
+      innerHeight,
+      margin.left,
+      margin.top,
+      margin.bottom,
+      polygons,
+      dispatch,
+   ]);
 
    return (
       <div className={styles.chartContainerLeft}>
