@@ -47,6 +47,13 @@ export default function Chart({ width = 800, height = 600 }: ChartProps) {
    const x = d3.scaleLinear().domain([200, 1000]).range([0, innerWidth]);
    const y = d3.scaleLinear().domain([0, 1000]).range([innerHeight, 0]);
 
+   // Add isMounted check
+   const [isMounted, setIsMounted] = useState(false);
+   
+   useEffect(() => {
+      setIsMounted(true);
+   }, []);
+
    // Setup D3 chart
    useEffect(() => {
       if (!svgRef.current || !data.length) return;
@@ -142,6 +149,9 @@ export default function Chart({ width = 800, height = 600 }: ChartProps) {
       polygons,
       dispatch,
    ]);
+
+   // Modify return statement
+   if (!isMounted) return null;
 
    return (
       <div className={styles.chartContainerLeft}>

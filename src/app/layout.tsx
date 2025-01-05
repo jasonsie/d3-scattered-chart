@@ -1,10 +1,8 @@
-import type { Metadata } from 'next';
-import '@styles/globals.css';
+'use client';
 
-export const metadata: Metadata = {
-   title: 'D3 Brush Example',
-   description: 'D3 Brush Example',
-};
+import '@styles/globals.css';
+import { ChartProvider } from '@/contexts/ChartContext';
+import Head from 'next/head';
 
 export default function RootLayout({
    children,
@@ -13,7 +11,13 @@ export default function RootLayout({
 }>) {
    return (
       <html lang="en">
-         <body>{children}</body>
+         <Head>
+            <title>D3 Brush Example</title>
+            <meta name="description" content="D3 Brush Example" />
+         </Head>
+         <body suppressHydrationWarning>
+            <ChartProvider>{children}</ChartProvider>
+         </body>
       </html>
    );
 }
