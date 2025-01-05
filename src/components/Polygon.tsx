@@ -307,55 +307,55 @@ export default function Polygon({ g, data, xScale, yScale, margin }: PolygonProp
                .style('user-select', 'none')
                .style('-webkit-user-select', 'none')
                .style('-moz-user-select', 'none')
-               .text((d) => `n = ${d.data.count} (${d.data.percentage}%)`);
+               // .text((d) => `n = ${d.data.count} (${d.data.percentage}%)`);
 
             // Add edit button if polygon is selected
-            if (selectedPolygonId.includes(d.id)) {
-               labelGroup
-                  .selectAll('text.edit-button')
-                  .data([d])
-                  .join('text')
-                  .attr('class', 'edit-button')
-                  .attr('x', centroid[0] + 35)
-                  .attr('y', centroid[1] - 6)
-                  .attr('fill', 'black')
-                  .attr('font-size', '14px')
-                  .style('cursor', 'pointer')
-                  .style('pointer-events', 'all')
-                  .style('user-select', 'none')
-                  .text('✎')
-                  .on('mousedown', (event: MouseEvent, d) => {
-                     event.preventDefault();
-                     event.stopPropagation();
-                     dispatch({
-                        type: 'SET_SHOW_POPUP',
-                        show: { id: d.id, value: true },
-                     });
-                  });
-            }
+            // if (selectedPolygonId.includes(d.id)) {
+            //    labelGroup
+            //       .selectAll('text.edit-button')
+            //       .data([d])
+            //       .join('text')
+            //       .attr('class', 'edit-button')
+            //       .attr('x', centroid[0] + 35)
+            //       .attr('y', centroid[1] - 6)
+            //       .attr('fill', 'black')
+            //       .attr('font-size', '14px')
+            //       .style('cursor', 'pointer')
+            //       .style('pointer-events', 'all')
+            //       .style('user-select', 'none')
+            //       .text('✎')
+            //       .on('mousedown', (event: MouseEvent, d) => {
+            //          event.preventDefault();
+            //          event.stopPropagation();
+            //          dispatch({
+            //             type: 'SET_SHOW_POPUP',
+            //             show: { id: d.id, value: true },
+            //          });
+            //       });
+            // }
 
             // Add delete button if polygon is selected
-            if (selectedPolygonId.includes(d.id)) {
-               labelGroup
-                  .selectAll('text.delete-button')
-                  .data([d])
-                  .join('text')
-                  .attr('class', 'delete-button')
-                  .attr('x', centroid[0] + 60)
-                  .attr('y', centroid[1] - 6)
-                  .attr('text-anchor', 'middle')
-                  .attr('fill', 'black')
-                  .attr('font-size', '16px')
-                  .style('cursor', 'pointer')
-                  .style('pointer-events', 'all')
-                  .style('user-select', 'none')
-                  .text('×')
-                  .on('mousedown', (event: MouseEvent) => {
-                     event.preventDefault();
-                     event.stopPropagation();
-                     dispatch({ type: 'DELETE_POLYGON', id: d.id });
-                  });
-            }
+            // if (selectedPolygonId.includes(d.id)) {
+            //    labelGroup
+            //       .selectAll('text.delete-button')
+            //       .data([d])
+            //       .join('text')
+            //       .attr('class', 'delete-button')
+            //       .attr('x', centroid[0] + 60)
+            //       .attr('y', centroid[1] - 6)
+            //       .attr('text-anchor', 'middle')
+            //       .attr('fill', 'black')
+            //       .attr('font-size', '16px')
+            //       .style('cursor', 'pointer')
+            //       .style('pointer-events', 'all')
+            //       .style('user-select', 'none')
+            //       .text('×')
+            //       .on('mousedown', (event: MouseEvent) => {
+            //          event.preventDefault();
+            //          event.stopPropagation();
+            //          dispatch({ type: 'DELETE_POLYGON', id: d.id });
+            //       });
+            // }
          });
 
       // Update vertices to use points from new Polygon type
