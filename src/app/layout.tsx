@@ -1,8 +1,11 @@
-'use client';
-
 import '@styles/globals.css';
 import { ChartProvider } from '@/contexts/ChartContext';
-import Head from 'next/head';
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+   title: 'Ahead Medicine Test',
+   description: '2025 Data Visualization Challenge',
+};
 
 export default function RootLayout({
    children,
@@ -11,10 +14,6 @@ export default function RootLayout({
 }>) {
    return (
       <html lang="en">
-         <Head>
-            <title>D3 Brush Example</title>
-            <meta name="description" content="D3 Brush Example" />
-         </Head>
          <body suppressHydrationWarning>
             <ChartProvider>{children}</ChartProvider>
          </body>
