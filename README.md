@@ -1,5 +1,5 @@
 
-This is a  Data Visualization project for the 2024 Data Visualization Challenge. The project is built using D3.js, React, Next.js, Tailwind CSS, TypeScript, Context API, React Hooks, and React Context. The project is a web application that allows users to visualize data on a Chart. 
+This is a  Data Visualization project for the 2025 Data Visualization Challenge. The project is a web application that allows users to visualize data on a Chart. The project is built using D3.js, React, Next.js, Tailwind CSS, TypeScript, Context API, React Hooks, and React Context. 
 
 
 ## Getting Started
@@ -7,8 +7,8 @@ This is a  Data Visualization project for the 2024 Data Visualization Challenge.
 First, run the development server:
 
 ```bash
+yarn
 yarn dev
-npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
@@ -21,6 +21,8 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
   ![Edition](./public/readMe/edit.gif "Edition Example")
 - Data: Supporting AND, OR Condition
   ![Data](./public/readMe/data.gif "Data Example")
+- Data: Summation of Data inside Polygon : "Amount" & "Percentage"
+  ![Data](./public/readMe/selection_summarygif "Data Example")
 
 ## Features
 - Polygon
