@@ -17,12 +17,12 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 ## Examples
 - Arbitrary Polygon Creation and Selection
   ![Creation](./public/readMe/create.gif "Creation Example")
+
 - Polygon: Supporting Edition, Disable, Enable, Delete
   ![Edition](./public/readMe/edit.gif "Edition Example")
-- Data: Supporting AND, OR Condition
-  ![Data](./public/readMe/data.gif "Data Example")
-- Data: Summation of Data inside Polygon : "Amount" & "Percentage"
-  ![Data](./public/readMe/selection_summarygif "Data Example")
+
+- Data: Summation of "AND", "OR" Condition
+  ![Data](./public/readMe/selection_summary.gif "Data Example")
 
 ## Features
 - Polygon
