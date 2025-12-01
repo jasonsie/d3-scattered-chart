@@ -2,8 +2,8 @@
 
 import { ChartProvider } from '@/contexts/ChartContext';
 import Chart from '@/components/Chart';
-import styles from '@styles/page.module.css';
-import Sidebar from '@components/Sidebar';
+import styles from '@/styles/page.module.css';
+import Sidebar from '@/components/Sidebar';
 
 export default function Home() {
    return (

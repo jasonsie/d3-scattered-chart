@@ -45,6 +45,7 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 ## Techniques
 - D3.js
 - React
+- motion-library
 - Next.js 
 - Tailwind CSS
 - TypeScript
