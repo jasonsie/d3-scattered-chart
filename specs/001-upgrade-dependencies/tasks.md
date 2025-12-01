@@ -111,12 +111,12 @@
 
 **Purpose**: Final validation and documentation
 
-- [ ] T059 [P] Run contract validation for package.json using contracts/package-json-schema.md checklist
-- [ ] T060 [P] Run contract validation for tsconfig.json using contracts/tsconfig-schema.md checklist
-- [ ] T061 Review git changes with `git status` and `git diff package.json`
-- [ ] T062 Commit upgrade changes with descriptive message documenting all version updates
-- [ ] T063 Update project documentation (README.md, CLAUDE.md) if Node.js version requirement changed
-- [ ] T064 Mark spec.md as implemented and close feature issue #001
+- [X] T059 [P] Run contract validation for package.json using contracts/package-json-schema.md checklist
+- [X] T060 [P] Run contract validation for tsconfig.json using contracts/tsconfig-schema.md checklist
+- [X] T061 Review git changes with `git status` and `git diff package.json`
+- [X] T062 Commit upgrade changes with descriptive message documenting all version updates
+- [X] T063 Update project documentation (README.md, CLAUDE.md) if Node.js version requirement changed
+- [X] T064 Mark spec.md as implemented and close feature issue #001
 
 ---
 
