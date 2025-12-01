@@ -2,10 +2,10 @@
 
 import { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
-import styles from '@styles/page.module.css';
+import styles from '@/styles/page.module.css';
 import Polygon from './Polygon';
 import { useChartDispatch, useChartState } from '@/contexts/ChartContext';
-import { CellData } from '@utils/data/loadCsvData';
+import { CellData } from '@/utils/data/loadCsvData';
 
 export interface ChartProps {
    width?: number;

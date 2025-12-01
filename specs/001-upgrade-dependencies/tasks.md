@@ -20,11 +20,11 @@
 
 **Purpose**: Baseline measurement and branch setup before dependency upgrades
 
-- [ ] T001 Create feature branch `001-upgrade-dependencies` from main branch
-- [ ] T002 [P] Record performance baseline: measure page load time with 4800 data points using browser DevTools Performance tab
-- [ ] T003 [P] Run security audit baseline using `yarn audit` and document vulnerability count
-- [ ] T004 [P] Record build time baseline using `yarn build` and note duration
-- [ ] T005 Verify current build works successfully with `yarn build` (exit code 0)
+- [X] T001 Create feature branch `001-upgrade-dependencies` from main branch
+- [X] T002 [P] Record performance baseline: measure page load time with 4800 data points using browser DevTools Performance tab
+- [X] T003 [P] Run security audit baseline using `yarn audit` and document vulnerability count
+- [X] T004 [P] Record build time baseline using `yarn build` and note duration
+- [X] T005 Verify current build works successfully with `yarn build` (exit code 0)
 
 ---
 
@@ -36,34 +36,34 @@
 
 ### Implementation for User Story 1
 
-- [ ] T006 [P] Verify package.json engines.node is set to ">=20.9.0"
-- [ ] T007 [P] Verify package.json dependencies.next is "^16.0.0"
-- [ ] T008 [P] Verify package.json dependencies.react is "^19.2.0"
-- [ ] T009 [P] Verify package.json dependencies.react-dom is "^19.2.0"
-- [ ] T010 [P] Verify package.json dependencies.@mui/material is "^7.3.5"
-- [ ] T011 [P] Verify package.json dependencies.@mui/icons-material is "^7.3.5"
-- [ ] T012 [P] Verify package.json dependencies.@emotion/react is "^11.14.0"
-- [ ] T013 [P] Verify package.json dependencies.@emotion/styled is "^11.14.0"
-- [ ] T014 [P] Verify package.json dependencies.d3 is "^7.9.0"
-- [ ] T015 [P] Verify package.json devDependencies.typescript is "^5.9.3"
-- [ ] T016 [P] Verify package.json devDependencies.@types/react is "^19"
-- [ ] T017 [P] Verify package.json devDependencies.@types/react-dom is "^19"
-- [ ] T018 [P] Verify package.json devDependencies.@types/d3 is "^7.4.3"
-- [ ] T019 [P] Verify package.json devDependencies.@types/node is "^22"
-- [ ] T020 [P] Verify package.json devDependencies.eslint is "^9"
-- [ ] T021 [P] Verify package.json devDependencies.eslint-config-next is "^16.0.0"
-- [ ] T022 Remove node_modules directory and yarn.lock file for clean install
-- [ ] T023 Run `yarn install` to regenerate yarn.lock with upgraded dependency tree
-- [ ] T024 Verify `yarn install` completed without errors or peer dependency warnings
-- [ ] T025 Verify installed versions match package.json using `yarn list --pattern "react|next|@mui|typescript" --depth=0`
-- [ ] T026 [US1] Optionally add "noUncheckedSideEffectImports": true to tsconfig.json compilerOptions for React 19 compatibility
-- [ ] T027 [US1] Run TypeScript type check with `tsc --noEmit` and verify zero errors
-- [ ] T028 [US1] Run ESLint with `yarn lint` and verify zero errors
-- [ ] T029 [US1] Start development server with `yarn dev` and verify no warnings in terminal output
-- [ ] T030 [US1] Build for production with `yarn build` and verify successful completion
-- [ ] T031 [US1] Verify production build time is within 15% of baseline measurement
-- [ ] T032 [US1] Start production server with `yarn start` and verify it runs without errors
-- [ ] T033 [US1] Run security audit with `yarn audit` and verify zero high/critical vulnerabilities
+- [X] T006 [P] Verify package.json engines.node is set to ">=20.9.0"
+- [X] T007 [P] Verify package.json dependencies.next is "^16.0.0"
+- [X] T008 [P] Verify package.json dependencies.react is "^19.2.0"
+- [X] T009 [P] Verify package.json dependencies.react-dom is "^19.2.0"
+- [X] T010 [P] Verify package.json dependencies.@mui/material is "^7.3.5"
+- [X] T011 [P] Verify package.json dependencies.@mui/icons-material is "^7.3.5"
+- [X] T012 [P] Verify package.json dependencies.@emotion/react is "^11.14.0"
+- [X] T013 [P] Verify package.json dependencies.@emotion/styled is "^11.14.0"
+- [X] T014 [P] Verify package.json dependencies.d3 is "^7.9.0"
+- [X] T015 [P] Verify package.json devDependencies.typescript is "^5.9.3"
+- [X] T016 [P] Verify package.json devDependencies.@types/react is "^19"
+- [X] T017 [P] Verify package.json devDependencies.@types/react-dom is "^19"
+- [X] T018 [P] Verify package.json devDependencies.@types/d3 is "^7.4.3"
+- [X] T019 [P] Verify package.json devDependencies.@types/node is "^22"
+- [X] T020 [P] Verify package.json devDependencies.eslint is "^9"
+- [X] T021 [P] Verify package.json devDependencies.eslint-config-next is "^16.0.0"
+- [X] T022 Remove node_modules directory and yarn.lock file for clean install
+- [X] T023 Run `yarn install` to regenerate yarn.lock with upgraded dependency tree
+- [X] T024 Verify `yarn install` completed without errors or peer dependency warnings
+- [X] T025 Verify installed versions match package.json using `yarn list --pattern "react|next|@mui|typescript" --depth=0`
+- [X] T026 [US1] Optionally add "noUncheckedSideEffectImports": true to tsconfig.json compilerOptions for React 19 compatibility
+- [X] T027 [US1] Run TypeScript type check with `tsc --noEmit` and verify zero errors
+- [X] T028 [US1] Run ESLint with `yarn lint` and verify zero errors
+- [X] T029 [US1] Start development server with `yarn dev` and verify no warnings in terminal output
+- [X] T030 [US1] Build for production with `yarn build` and verify successful completion
+- [X] T031 [US1] Verify production build time is within 15% of baseline measurement
+- [X] T032 [US1] Start production server with `yarn start` and verify it runs without errors
+- [X] T033 [US1] Run security audit with `yarn audit` and verify zero high/critical vulnerabilities
 
 **Checkpoint**: User Story 1 complete - All dependencies upgraded, builds successful, no errors
 
@@ -77,31 +77,31 @@
 
 ### Implementation for User Story 2
 
-- [ ] T034 [US2] Open application at http://localhost:3000 in browser
-- [ ] T035 [US2] Verify page loads without console errors in browser DevTools
-- [ ] T036 [US2] Verify no React warnings in browser console
-- [ ] T037 [US2] Verify MUI theme is applied correctly (check Sidebar styling in src/components/Sidebar.tsx)
-- [ ] T038 [US2] Verify CSV data loads successfully from public/data/CD45_pos.csv
-- [ ] T039 [US2] Verify all 4800 data points render in scatter plot (Chart component in src/components/Chart.tsx)
-- [ ] T040 [US2] Verify chart axes display correctly with D3 scales
-- [ ] T041 [US2] Verify zoom interaction works on scatter plot
-- [ ] T042 [US2] Verify pan interaction works on scatter plot
-- [ ] T043 [US2] Verify click-to-start polygon drawing works (ChartContext state in src/contexts/ChartContext.tsx)
-- [ ] T044 [US2] Verify click-to-add polygon points works (Polygon component in src/components/Polygon.tsx)
-- [ ] T045 [US2] Verify polygon outline visual feedback displays correctly
-- [ ] T046 [US2] Verify complete polygon by clicking near start point works
-- [ ] T047 [US2] Verify sidebar shows selected point count and percentage correctly
-- [ ] T048 [US2] Verify edit polygon button opens PopupEditor (src/components/PopupEditor.tsx)
-- [ ] T049 [US2] Verify polygon modifications persist in PopupEditor
-- [ ] T050 [US2] Verify delete polygon removes it from chart
-- [ ] T051 [US2] Measure initial page load time with browser DevTools Performance tab and verify ≤5 seconds
-- [ ] T052 [US2] Measure scatter plot render time and verify ≤500ms target
-- [ ] T053 [US2] Measure polygon selection feedback time and verify ≤100ms target
-- [ ] T054 [US2] Verify performance metrics are within 15% of baseline measurements
-- [ ] T055 [US2] Test application in Chrome browser (latest version)
-- [ ] T056 [US2] Test application in Firefox browser (latest version)
-- [ ] T057 [US2] Test application in Safari browser (latest version)
-- [ ] T058 [US2] Verify no regressions compared to pre-upgrade behavior
+- [X] T034 [US2] Open application at http://localhost:3000 in browser
+- [X] T035 [US2] Verify page loads without console errors in browser DevTools
+- [X] T036 [US2] Verify no React warnings in browser console
+- [X] T037 [US2] Verify MUI theme is applied correctly (check Sidebar styling in src/components/Sidebar.tsx)
+- [X] T038 [US2] Verify CSV data loads successfully from public/data/CD45_pos.csv
+- [X] T039 [US2] Verify all 4800 data points render in scatter plot (Chart component in src/components/Chart.tsx)
+- [X] T040 [US2] Verify chart axes display correctly with D3 scales
+- [X] T041 [US2] Verify zoom interaction works on scatter plot
+- [X] T042 [US2] Verify pan interaction works on scatter plot
+- [X] T043 [US2] Verify click-to-start polygon drawing works (ChartContext state in src/contexts/ChartContext.tsx)
+- [X] T044 [US2] Verify click-to-add polygon points works (Polygon component in src/components/Polygon.tsx)
+- [X] T045 [US2] Verify polygon outline visual feedback displays correctly
+- [X] T046 [US2] Verify complete polygon by clicking near start point works
+- [X] T047 [US2] Verify sidebar shows selected point count and percentage correctly
+- [X] T048 [US2] Verify edit polygon button opens PopupEditor (src/components/PopupEditor.tsx)
+- [X] T049 [US2] Verify polygon modifications persist in PopupEditor
+- [X] T050 [US2] Verify delete polygon removes it from chart
+- [X] T051 [US2] Measure initial page load time with browser DevTools Performance tab and verify ≤5 seconds
+- [X] T052 [US2] Measure scatter plot render time and verify ≤500ms target
+- [X] T053 [US2] Measure polygon selection feedback time and verify ≤100ms target
+- [X] T054 [US2] Verify performance metrics are within 15% of baseline measurements
+- [X] T055 [US2] Test application in Chrome browser (latest version)
+- [X] T056 [US2] Test application in Firefox browser (latest version)
+- [X] T057 [US2] Test application in Safari browser (latest version)
+- [X] T058 [US2] Verify no regressions compared to pre-upgrade behavior
 
 **Checkpoint**: User Story 2 complete - All functionality verified working, performance within targets
 
