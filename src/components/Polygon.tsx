@@ -16,7 +16,7 @@ export interface PolygonProps {
 
 export type Point = { x: number; y: number };
 export type Polygon = {
-   id: number;
+   id: string;
    label: string;
    points: Point[];
    isVisible: boolean;
@@ -189,7 +189,7 @@ export default function Polygon({ g, data, xScale, yScale, margin }: PolygonProp
       if (distance < 15 && currentPoints.length > 2) {
          const stats = calculatePolygonStats(currentPoints);
          const newPolygon: Polygon = {
-            id: Date.now(),
+            id: String(Date.now()),
             label: `Group-${polygons.length + 1}`,
             points: currentPoints,
             isVisible: true,
@@ -469,7 +469,7 @@ export default function Polygon({ g, data, xScale, yScale, margin }: PolygonProp
    };
 
    // Add new function to handle polygon selection
-   const handlePolygonClick = (id: number) => {
+   const handlePolygonClick = (id: string) => {
       if (isDrawing) return;
       // const isSelected = selectedPolygonId.includes(id);
 
@@ -481,7 +481,7 @@ export default function Polygon({ g, data, xScale, yScale, margin }: PolygonProp
 
    // Add new function to handle polygon updates
    const handlePolygonUpdate = (
-      id: number,
+      id: string,
       newLabel: string,
       newColor: string,
       newLine: string,
@@ -525,8 +525,8 @@ export default function Polygon({ g, data, xScale, yScale, margin }: PolygonProp
                color={polygons.find((p) => p.id === showPopup.id)?.color || '#808080'}
                line={polygons.find((p) => p.id === showPopup.id)?.line || 'solid'}
                dot={polygons.find((p) => p.id === showPopup.id)?.dot || '#ffffff'}
-               onSave={(newLabel, newColor, newLine, newDot) =>
-                  handlePolygonUpdate(showPopup.id, newLabel, newColor, newLine, newDot)
+               onSave={(data) =>
+                  handlePolygonUpdate(showPopup.id, data.label, data.color, data.line, data.dot)
                }
                onClose={() =>
                   dispatch({

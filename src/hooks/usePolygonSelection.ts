@@ -11,13 +11,13 @@ import type { CoordinateTransform } from '@/types/canvas';
 import type { DataX, DataY } from '@/types/canvas';
 
 export interface PolygonData {
-  id: number;
+  id: string;
   points: Array<{ x: number; y: number }>;
   isVisible: boolean;
 }
 
 export interface SelectionMap {
-  [polygonId: number]: number[]; // polygon ID -> array of data point indices
+  [polygonId: string]: number[]; // polygon ID -> array of data point indices
 }
 
 /**

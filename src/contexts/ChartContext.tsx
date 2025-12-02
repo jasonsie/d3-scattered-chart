@@ -2,23 +2,23 @@
 
 import { createContext, useContext, useReducer, ReactNode, useEffect } from 'react';
 import { CellData, loadCsvData } from '@/utils/data/loadCsvData';
-import { Point, Polygon } from '@/components/Polygon';
+import type { Point, Polygon } from '@/types/components';
 import * as d3 from 'd3';
 import type { Viewport, CanvasLayer, CoordinateTransform, SpatialIndex } from '@/types/canvas';
 
 // Types
 type ShowPopup = 
-   | { id: number; value: true }
+   | { id: string; value: true }
    | { id: null; value: false };
 interface ChartState {
    data: CellData[];
    polygons: Polygon[];
    currentPoints: Point[];
-   selectedPolygonId: number[];
+   selectedPolygonId: string[];
    isDrawing: boolean;
    showPopup: ShowPopup;
    loading: boolean;
-   checkedPolygons: number[];
+   checkedPolygons: string[];
    scales: {
       xScale: d3.ScaleLinear<number, number>;
       yScale: d3.ScaleLinear<number, number>;
@@ -40,18 +40,18 @@ type ChartAction =
    | { type: 'SET_CURRENT_POINTS'; points: Point[] }
    | {
         type: 'UPDATE_POLYGON';
-        id: number;
+        id: string;
         newLabel?: string;
         newColor?: string;
         isVisible?: boolean;
         line?: string;
         dot?: string;
      }
-   | { type: 'SET_SELECTED_POLYGON'; id: number  }
+   | { type: 'SET_SELECTED_POLYGON'; id: string  }
    | { type: 'SET_SHOW_POPUP'; show: ShowPopup }
    | { type: 'SET_LOADING'; loading: boolean }
    | { type: 'SET_DRAWING'; isDrawing: boolean }
-   | { type: 'DELETE_POLYGON'; id: number }
+   | { type: 'DELETE_POLYGON'; id: string }
    | { type: 'SET_SCALES'; scales: { xScale: d3.ScaleLinear<number, number>; yScale: d3.ScaleLinear<number, number> } }
    // Canvas-specific actions
    | { type: 'SET_VIEWPORT'; viewport: Viewport }
