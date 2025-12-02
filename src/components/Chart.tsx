@@ -285,7 +285,7 @@ export default function Chart({ width = 800, height = 600 }: ChartProps) {
                   className={styles.dataLayer}
                   width={innerWidth}
                   height={innerHeight}
-                  style={{ position: 'absolute', zIndex: 0, left: margin.left, top: margin.top }}
+                  style={{ position: 'absolute', zIndex: 0, left: margin.left, top: margin.top, width: innerWidth, height: innerHeight }}
                />
 
                {/* Layer 1: Polygon overlays */}
@@ -294,7 +294,7 @@ export default function Chart({ width = 800, height = 600 }: ChartProps) {
                   className={styles.polygonLayer}
                   width={innerWidth}
                   height={innerHeight}
-                  style={{ position: 'absolute', zIndex: 1, left: margin.left, top: margin.top }}
+                  style={{ position: 'absolute', zIndex: 1, left: margin.left, top: margin.top, width: innerWidth, height: innerHeight }}
                />
 
                {/* Layer 2: Interaction (SVG overlay for polygon drawing) */}

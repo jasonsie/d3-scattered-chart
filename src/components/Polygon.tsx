@@ -513,8 +513,8 @@ export default function Polygon({ g, data, xScale, yScale, margin }: PolygonProp
                   left: margin.left,
                   top: margin.top,
                   pointerEvents: 'all',
-                  width: '100%',
-                  height: '100%',
+                  width: xScale.range()[1],
+                  height: yScale.range()[0],
                }}
             />
          )}
