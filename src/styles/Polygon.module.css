@@ -1,0 +1,30 @@
+.polygon {
+  pointer-events: all;
+  cursor: pointer;
+}
+
+.polygonSelected {
+  stroke: rgba(255, 0, 0, 0.6) !important;
+  stroke-width: 4px !important;
+}
+
+.polygonHovered {
+  stroke-width: 3px !important;
+  filter: brightness(1.2);
+}
+
+.polygonPath {
+  transition: stroke 0.2s ease, stroke-width 0.2s ease;
+}
+
+.polygonLabel {
+  text-anchor: middle;
+  dominant-baseline: middle;
+  fill: white;
+  font-size: 14px;
+  font-weight: bold;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  pointer-events: none;
+}

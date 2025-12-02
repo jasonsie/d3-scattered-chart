@@ -17,11 +17,11 @@
 
 **Purpose**: Project initialization and tooling configuration
 
-- [ ] T001 Install eslint-plugin-import dependency via `npm install --save-dev eslint-plugin-import`
-- [ ] T002 Configure ESLint import/no-cycle rule in eslint.config.mjs with maxDepth: 10
-- [ ] T003 Run TypeScript validation baseline via `npm run tsc -- --noEmit` to establish error-free state
-- [ ] T004 Create directory structure `src/utils/constants/` for constant definitions
-- [ ] T005 Create directory structure for new type files (verify `src/types/` exists)
+- [X] T001 Install eslint-plugin-import dependency via `npm install --save-dev eslint-plugin-import`
+- [X] T002 Configure ESLint import/no-cycle rule in eslint.config.mjs with maxDepth: 10
+- [X] T003 Run TypeScript validation baseline via `npm run tsc -- --noEmit` to establish error-free state
+- [X] T004 Create directory structure `src/utils/constants/` for constant definitions
+- [X] T005 Create directory structure for new type files (verify `src/types/` exists)
 
 ---
 
@@ -31,19 +31,19 @@
 
 **⚠️ CRITICAL**: All user story work depends on these tasks being complete
 
-- [ ] T006 [P] Create shared color constants in src/utils/constants/colors.ts with COLORS object (POINT_UNSELECTED, POINT_UNSELECTED_ALPHA, POINT_SELECTED_ALPHA, POLYGON_DEFAULT, POLYGON_FILL_ALPHA, TEXT_PRIMARY)
-- [ ] T007 [P] Create dimension constants in src/utils/constants/dimensions.ts with CHART_DIMENSIONS and FONT_SIZES objects
-- [ ] T008 [P] Create performance constants in src/utils/constants/performance.ts with PERFORMANCE object (MAX_RENDER_TIME_MS, SELECTION_FEEDBACK_MS, STATS_UPDATE_MS, RESIZE_DEBOUNCE_MS, PAN_THROTTLE_MS)
-- [ ] T009 [P] Create chart constants in src/utils/constants/chart.ts with CHART_CONSTANTS (DATA_DOMAIN_X, DATA_DOMAIN_Y, AXIS_LABELS, TICK_VALUES_X, TICK_VALUES_Y), LAYER_Z_INDEX enum
-- [ ] T010 [P] Create polygon constants in src/utils/constants/polygon.ts with POLYGON_CONSTANTS object and PolygonState enum
-- [ ] T011 [P] Create canvas constants in src/utils/constants/canvas.ts with CANVAS_CONSTANTS object and CanvasLayerId enum
-- [ ] T012 [P] Create component type definitions in src/types/components.d.ts (ChartProps, PolygonProps, PopupEditorProps, SidebarProps, Polygon, Point, PolygonStyle interfaces)
-- [ ] T013 [P] Create state type definitions in src/types/state.d.ts (ChartData, DataPoint, SelectionState, UIState, ShowPopup, DrawMode, Margins interfaces)
-- [ ] T014 [P] Create hook type definitions in src/types/hooks.d.ts (CanvasRendererResult, RenderFunction, CoordinateTransformResult, PolygonSelectionResult, SpatialIndexResult interfaces)
-- [ ] T015 Create ChartDataContext in src/contexts/ChartDataContext.tsx with read-only data provider, useChartData hook (CSV loading, D3 scales, dimensions)
-- [ ] T016 Create ChartSelectionContext in src/contexts/ChartSelectionContext.tsx with reducer pattern (10 actions: ADD_POLYGON, UPDATE_POLYGON, DELETE_POLYGON, SELECT_POLYGON, DESELECT_POLYGON, CLEAR_SELECTION, START_DRAWING, ADD_POINT, COMPLETE_POLYGON, CANCEL_DRAWING) and dispatch context
-- [ ] T017 Create ChartUIContext in src/contexts/ChartUIContext.tsx with reducer pattern (5 actions: OPEN_EDITOR, CLOSE_EDITOR, TOGGLE_SIDEBAR, SET_DRAW_MODE, TOGGLE_LABELS) and dispatch context
-- [ ] T018 Update src/app/page.tsx to wrap app with ChartDataProvider, ChartSelectionProvider, ChartUIProvider (keep old ChartContext for now)
+- [X] T006 [P] Create shared color constants in src/utils/constants/colors.ts with COLORS object (POINT_UNSELECTED, POINT_UNSELECTED_ALPHA, POINT_SELECTED_ALPHA, POLYGON_DEFAULT, POLYGON_FILL_ALPHA, TEXT_PRIMARY)
+- [X] T007 [P] Create dimension constants in src/utils/constants/dimensions.ts with CHART_DIMENSIONS and FONT_SIZES objects
+- [X] T008 [P] Create performance constants in src/utils/constants/performance.ts with PERFORMANCE object (MAX_RENDER_TIME_MS, SELECTION_FEEDBACK_MS, STATS_UPDATE_MS, RESIZE_DEBOUNCE_MS, PAN_THROTTLE_MS)
+- [X] T009 [P] Create chart constants in src/utils/constants/chart.ts with CHART_CONSTANTS (DATA_DOMAIN_X, DATA_DOMAIN_Y, AXIS_LABELS, TICK_VALUES_X, TICK_VALUES_Y), LAYER_Z_INDEX enum
+- [X] T010 [P] Create polygon constants in src/utils/constants/polygon.ts with POLYGON_CONSTANTS object and PolygonState enum
+- [X] T011 [P] Create canvas constants in src/utils/constants/canvas.ts with CANVAS_CONSTANTS object and CanvasLayerId enum
+- [X] T012 [P] Create component type definitions in src/types/components.d.ts (ChartProps, PolygonProps, PopupEditorProps, SidebarProps, Polygon, Point, PolygonStyle interfaces)
+- [X] T013 [P] Create state type definitions in src/types/state.d.ts (ChartData, DataPoint, SelectionState, UIState, ShowPopup, DrawMode, Margins interfaces)
+- [X] T014 [P] Create hook type definitions in src/types/hooks.d.ts (CanvasRendererResult, RenderFunction, CoordinateTransformResult, PolygonSelectionResult, SpatialIndexResult interfaces)
+- [X] T015 Create ChartDataContext in src/contexts/ChartDataContext.tsx with read-only data provider, useChartData hook (CSV loading, D3 scales, dimensions)
+- [X] T016 Create ChartSelectionContext in src/contexts/ChartSelectionContext.tsx with reducer pattern (10 actions: ADD_POLYGON, UPDATE_POLYGON, DELETE_POLYGON, SELECT_POLYGON, DESELECT_POLYGON, CLEAR_SELECTION, START_DRAWING, ADD_POINT, COMPLETE_POLYGON, CANCEL_DRAWING) and dispatch context
+- [X] T017 Create ChartUIContext in src/contexts/ChartUIContext.tsx with reducer pattern (5 actions: OPEN_EDITOR, CLOSE_EDITOR, TOGGLE_SIDEBAR, SET_DRAW_MODE, TOGGLE_LABELS) and dispatch context
+- [X] T018 Update src/app/page.tsx to wrap app with ChartDataProvider, ChartSelectionProvider, ChartUIProvider (keep old ChartContext for now)
 
 **Checkpoint**: Foundation ready - all constants, types, and contexts exist. User story implementation can now begin.
 
@@ -59,18 +59,18 @@
 
 ### Implementation for User Story 1
 
-- [ ] T019 [P] [US1] Create CSS module src/styles/PopupEditor.module.css with classes: modal, modalHeader, inputGroup, inputLabel, inputField, buttonGroup, saveButton, cancelButton
-- [ ] T020 [US1] Refactor src/components/PopupEditor.tsx - import PopupEditorProps type from @/types/components, import styles from PopupEditor.module.css, replace all inline style={{}} with className={styles.*}, remove unused imports/variables
-- [ ] T021 [US1] Add JSDoc documentation to PopupEditor component describing purpose (polygon property editor modal), parameters, return value, and usage example
-- [ ] T022 [P] [US1] Create CSS module src/styles/Sidebar.module.css with classes: sidebar, sidebarExpanded, sidebarCollapsed, toggleButton, polygonList, polygonListItem, statistics, statisticsRow
-- [ ] T023 [US1] Refactor src/components/Sidebar.tsx - import SidebarProps from @/types/components, import constants (colors, dimensions), import styles from Sidebar.module.css, replace inline styles with CSS classes, remove unused code
-- [ ] T024 [US1] Add JSDoc documentation to Sidebar component describing purpose (polygon list and statistics display), state management, and interaction patterns
+- [X] T019 [P] [US1] Create CSS module src/styles/PopupEditor.module.css with classes: modal, modalHeader, inputGroup, inputLabel, inputField, buttonGroup, saveButton, cancelButton
+- [X] T020 [US1] Refactor src/components/PopupEditor.tsx - import PopupEditorProps type from @/types/components, import styles from PopupEditor.module.css, replace all inline style={{}} with className={styles.*}, remove unused imports/variables
+- [X] T021 [US1] Add JSDoc documentation to PopupEditor component describing purpose (polygon property editor modal), parameters, return value, and usage example
+- [X] T022 [P] [US1] Create CSS module src/styles/Sidebar.module.css with classes: sidebar, sidebarExpanded, sidebarCollapsed, toggleButton, polygonList, polygonListItem, statistics, statisticsRow
+- [X] T023 [US1] Refactor src/components/Sidebar.tsx - import SidebarProps from @/types/components, import constants (colors, dimensions), import styles from Sidebar.module.css, replace inline styles with CSS classes, remove unused code
+- [X] T024 [US1] Add JSDoc documentation to Sidebar component describing purpose (polygon list and statistics display), state management, and interaction patterns
 - [ ] T025 [P] [US1] Create CSS module src/styles/Polygon.module.css with classes: polygon, polygonSelected, polygonHovered, polygonPath, polygonLabel
 - [ ] T026 [US1] Refactor src/components/Polygon.tsx - import PolygonProps and Polygon types from @/types/components, import POLYGON_CONSTANTS and PolygonState from @/utils/constants/polygon, import COLORS from @/utils/constants/colors, import styles from Polygon.module.css, replace inline styles, remove unused code
 - [ ] T027 [US1] Add JSDoc documentation to Polygon component describing purpose (single polygon SVG path rendering), props, and selection behavior
-- [ ] T028 [P] [US1] Update src/styles/Chart.module.css to add missing classes: chartContainer, svgCanvas, dataPointsLayer, polygonOverlayLayer, axesLayer, interactionLayer
-- [ ] T029 [US1] Refactor src/components/Chart.tsx - import ChartProps from @/types/components, import all constants (CHART_CONSTANTS, CHART_DIMENSIONS, COLORS, LAYER_Z_INDEX), import styles from Chart.module.css, replace all magic numbers/strings with named constants (data domains, margins, tick values, axis labels, colors, alphas, z-indexes), replace remaining inline styles with CSS classes, remove unused imports/variables
-- [ ] T030 [US1] Add JSDoc documentation to Chart component describing purpose (scatter plot and polygon overlay rendering), data flow, canvas layering, and performance characteristics
+- [X] T028 [P] [US1] Update src/styles/Chart.module.css to add missing classes: chartContainer, svgCanvas, dataPointsLayer, polygonOverlayLayer, axesLayer, interactionLayer
+- [X] T029 [US1] Refactor src/components/Chart.tsx - import ChartProps from @/types/components, import all constants (CHART_CONSTANTS, CHART_DIMENSIONS, COLORS, LAYER_Z_INDEX), import styles from Chart.module.css, replace all magic numbers/strings with named constants (data domains, margins, tick values, axis labels, colors, alphas, z-indexes), replace remaining inline styles with CSS classes, remove unused imports/variables
+- [X] T030 [US1] Add JSDoc documentation to Chart component describing purpose (scatter plot and polygon overlay rendering), data flow, canvas layering, and performance characteristics
 - [ ] T031 [P] [US1] Add JSDoc to useCanvasRenderer hook in src/hooks/useCanvasRenderer.ts describing purpose (canvas rendering lifecycle), parameters, return values (context, render, clear, invalidateRect), and usage example
 - [ ] T032 [P] [US1] Add JSDoc to useCoordinateTransform hook in src/hooks/useCoordinateTransform.ts describing coordinate space transformations (data space vs SVG space), D3 scale usage, return values (toScreen, toData functions), and example
 - [ ] T033 [P] [US1] Add JSDoc to useDirtyRectTracking hook in src/hooks/useDirtyRectTracking.ts describing purpose (performance optimization via dirty rectangles), return values, and when to use
