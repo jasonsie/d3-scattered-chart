@@ -170,9 +170,7 @@ export default function Chart({ width = 800, height = 600 }: ChartProps) {
       // Pre-filter visible polygons
       const visiblePolygons = polygons.filter(p => p.isVisible && selectionMap[p.id]);
 
-      // Performance monitoring
-      const startTime = performance.now();
-
+      
       const frameId = requestAnimationFrame(() => {
          // Clear canvas
          clearCanvas(ctx, innerWidth, innerHeight);
@@ -192,7 +190,7 @@ export default function Chart({ width = 800, height = 600 }: ChartProps) {
          // Batch rendering by color to reduce context switches
          // 1. Render all unselected points first
          ctx.fillStyle = 'white';
-         ctx.globalAlpha = 0.4;
+         ctx.globalAlpha = 0.89;
          ctx.beginPath();
          data.forEach((point, dataIndex) => {
             if (!pointToPolygons.has(dataIndex)) {
