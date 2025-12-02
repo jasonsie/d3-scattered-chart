@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import * as d3 from 'd3';
-import { useChartDispatch, useChartState } from '@contexts/ChartContext';
+import { useChartDispatch, useChartState } from '@/contexts/ChartContext';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import ListItemIcon from '@mui/material/ListItemIcon';

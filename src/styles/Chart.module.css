@@ -18,4 +18,21 @@
 .y-axis text {
   fill: #666;
   font-size: 12px;
-} 
+}
+
+/* Canvas-based Chart component styles */
+.chartContainer {
+  position: relative;
+  width: fit-content;
+  height: fit-content;
+}
+
+.dataLayer {
+  position: absolute;
+  z-index: 0;
+}
+
+.polygonLayer {
+  position: absolute;
+  z-index: 1;
+}

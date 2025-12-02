@@ -8,12 +8,10 @@ export interface CellData {
 export const loadCsvData = async (): Promise<CellData[]> => {
    try {
       const data = await d3.csv('/data/CD45_pos.csv');
-      return data
-         .map(d => ({
-            x: +d['CD45-KrO'],
-            y: +d['SS INT LIN']
-         }))
-         // .slice(0, 100);  // Limit to first 500 points
+      return data.map(d => ({
+         x: +d['CD45-KrO'],
+         y: +d['SS INT LIN']
+      }));
    } catch (error) {
       console.error('Error loading CSV data:', error);
       return [];
