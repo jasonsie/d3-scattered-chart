@@ -177,48 +177,84 @@ export default function Chart({ width = 800, height = 600 }: ChartProps) {
          // Clear canvas
          clearCanvas(ctx, innerWidth, innerHeight);
 
-         // Render all data points with selection feedback
-         data.forEach((point, dataIndex) => {
-            const screenPos = transform.toScreen({ x: point.x as DataX, y: point.y as DataY });
-            
-            // Check which polygons contain this point (T112) - optimized
-            const containingPolygons = visiblePolygons.filter(polygon => 
-               selectionMap[polygon.id]?.includes(dataIndex)
-            );
-
-            // Determine colors based on selection (T113-T114)
-            if (containingPolygons.length > 0) {
-               // Use first polygon's dot color as base
-               const dotColor = containingPolygons[0].dot || 'white';
-               
-               // Render base dot (T113)
-               ctx.fillStyle = dotColor;
-               ctx.globalAlpha = 0.4;
-               ctx.beginPath();
-               ctx.arc(screenPos.x, screenPos.y, 1, 0, Math.PI * 2);
-               ctx.fill();
-
-               // Render polygon overlays with additive blending (T114-T115)
-               containingPolygons.forEach(polygon => {
-                  if (polygon.color) {
-                     ctx.fillStyle = polygon.color;
-                     ctx.globalAlpha = 0.2;
-                     ctx.beginPath();
-                     ctx.arc(screenPos.x, screenPos.y, 1, 0, Math.PI * 2);
-                     ctx.fill();
-                  }
-               });
-            } else {
-               // Render unselected point
-               ctx.fillStyle = 'white';
-               ctx.globalAlpha = 0.4;
-               ctx.beginPath();
-               ctx.arc(screenPos.x, screenPos.y, 1, 0, Math.PI * 2);
-               ctx.fill();
-            }
-
-            ctx.globalAlpha = 1.0; // Reset
+         // Build reverse index: point index -> containing polygons (O(n*m) once, not per point)
+         const pointToPolygons = new Map<number, typeof visiblePolygons>();
+         visiblePolygons.forEach(polygon => {
+            const selectedIndices = selectionMap[polygon.id] || [];
+            selectedIndices.forEach(dataIndex => {
+               if (!pointToPolygons.has(dataIndex)) {
+                  pointToPolygons.set(dataIndex, []);
+               }
+               pointToPolygons.get(dataIndex)!.push(polygon);
+            });
          });
+
+         // Batch rendering by color to reduce context switches
+         // 1. Render all unselected points first
+         ctx.fillStyle = 'white';
+         ctx.globalAlpha = 0.4;
+         ctx.beginPath();
+         data.forEach((point, dataIndex) => {
+            if (!pointToPolygons.has(dataIndex)) {
+               const screenPos = transform.toScreen({ x: point.x as DataX, y: point.y as DataY });
+               ctx.moveTo(screenPos.x + 1, screenPos.y);
+               ctx.arc(screenPos.x, screenPos.y, 1, 0, Math.PI * 2);
+            }
+         });
+         ctx.fill();
+
+         // 2. Render selected points grouped by their first polygon's dot color
+         const colorGroups = new Map<string, number[]>();
+         pointToPolygons.forEach((containingPolygons, dataIndex) => {
+            const dotColor = containingPolygons[0]?.dot || 'white';
+            if (!colorGroups.has(dotColor)) {
+               colorGroups.set(dotColor, []);
+            }
+            colorGroups.get(dotColor)!.push(dataIndex);
+         });
+
+         colorGroups.forEach((indices, dotColor) => {
+            ctx.fillStyle = dotColor;
+            ctx.globalAlpha = 0.4;
+            ctx.beginPath();
+            indices.forEach(dataIndex => {
+               const point = data[dataIndex];
+               const screenPos = transform.toScreen({ x: point.x as DataX, y: point.y as DataY });
+               ctx.moveTo(screenPos.x + 1, screenPos.y);
+               ctx.arc(screenPos.x, screenPos.y, 1, 0, Math.PI * 2);
+            });
+            ctx.fill();
+         });
+
+         // 3. Render polygon color overlays (batched by color)
+         const overlayGroups = new Map<string, number[]>();
+         pointToPolygons.forEach((containingPolygons, dataIndex) => {
+            containingPolygons.forEach(polygon => {
+               if (polygon.color) {
+                  if (!overlayGroups.has(polygon.color)) {
+                     overlayGroups.set(polygon.color, []);
+                  }
+                  overlayGroups.get(polygon.color)!.push(dataIndex);
+               }
+            });
+         });
+
+         overlayGroups.forEach((indices, color) => {
+            ctx.fillStyle = color;
+            ctx.globalAlpha = 0.2;
+            ctx.beginPath();
+            // Use Set to avoid duplicate points
+            const uniqueIndices = [...new Set(indices)];
+            uniqueIndices.forEach(dataIndex => {
+               const point = data[dataIndex];
+               const screenPos = transform.toScreen({ x: point.x as DataX, y: point.y as DataY });
+               ctx.moveTo(screenPos.x + 1, screenPos.y);
+               ctx.arc(screenPos.x, screenPos.y, 1, 0, Math.PI * 2);
+            });
+            ctx.fill();
+         });
+
+         ctx.globalAlpha = 1.0; // Reset
 
          const endTime = performance.now();
          const renderTime = endTime - startTime;
