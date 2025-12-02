@@ -1,11 +1,20 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import * as d3 from 'd3';
-import styles from '@/styles/page.module.css';
+import styles from '@/styles/Chart.module.css';
 import Polygon from './Polygon';
 import { useChartDispatch, useChartState } from '@/contexts/ChartContext';
 import { CellData } from '@/utils/data/loadCsvData';
+import { useCanvasRenderer } from '@/hooks/useCanvasRenderer';
+import { useCoordinateTransform } from '@/hooks/useCoordinateTransform';
+import { useSpatialIndex } from '@/hooks/useSpatialIndex';
+import { useViewportCulling } from '@/hooks/useViewportCulling';
+import { usePolygonSelection } from '@/hooks/usePolygonSelection';
+import { setupCanvas } from '@/utils/canvas/devicePixelRatio';
+import { clearCanvas } from '@/utils/canvas/canvasRenderer';
+import { renderPolygonFill, renderPolygonStroke } from '@/utils/canvas/canvasRenderer';
+import type { DataX, DataY, ScreenX, ScreenY, Viewport } from '@/types/canvas';
 
 export interface ChartProps {
    width?: number;
@@ -15,154 +24,350 @@ export interface ChartProps {
 /**
  * Chart Component
  *
- * A D3-based scatter plot component that allows polygon-based point selection.
+ * A Canvas-based scatter plot component that allows polygon-based point selection.
  * Features:
- * - Responsive SVG sizing (80% of viewport)
- * - Scatter plot with random data points
- * - Interactive polygon drawing for point selection
- * - Grid lines and axes for better visualization
+ * - Dual-layer Canvas rendering (data points + polygon overlays)
+ * - Viewport culling for 10k+ point performance
+ * - Interactive pan/zoom
+ * - Polygon drawing for point selection
  *
- * @param {number} width
- * @param {number} height
+ * @param {number} width - Canvas width in CSS pixels
+ * @param {number} height - Canvas height in CSS pixels
  */
 export default function Chart({ width = 800, height = 600 }: ChartProps) {
-   // Refs and State
-   const svgRef = useRef<SVGSVGElement>(null);
-   const { data, loading, polygons } = useChartState();
+   // Refs for Canvas elements
+   const dataLayerRef = useRef<HTMLCanvasElement>(null);
+   const polygonLayerRef = useRef<HTMLCanvasElement>(null);
+   const containerRef = useRef<HTMLDivElement>(null);
+
+   // Chart state from context
+   const { data, loading, polygons, viewport, spatialIndex, coordinateTransform } = useChartState();
    const dispatch = useChartDispatch();
-   const [groupSelection, setGroupSelection] = useState<d3.Selection<
-      SVGGElement,
-      unknown,
-      null,
-      undefined
-   > | null>(null);
 
-   // Chart dimensions
-   const margin = { top: 2, right: 2, bottom: 2, left: 2 };
-   const innerWidth = width - margin.left - margin.right;
-   const innerHeight = height - margin.top - margin.bottom;
-
-   // New state for scales
-   // Create scales with actual data ranges
-   const x = d3.scaleLinear().domain([200, 1000]).range([0, innerWidth]);
-   const y = d3.scaleLinear().domain([0, 1000]).range([innerHeight, 0]);
-
-   // Add isMounted check
+   // Mounted state for client-side rendering
    const [isMounted, setIsMounted] = useState(false);
-   
+   const [dimensions, setDimensions] = useState({ width, height });
+
+   // Chart dimensions (memoized to prevent recreation)
+   const margin = useRef({ top: 20, right: 20, bottom: 50, left: 60 }).current;
+   const innerWidth = dimensions.width - margin.left - margin.right;
+   const innerHeight = dimensions.height - margin.top - margin.bottom;
+
    useEffect(() => {
       setIsMounted(true);
    }, []);
 
-   // Setup D3 chart
+   // Measure actual container size on mount
    useEffect(() => {
-      if (!svgRef.current || !data.length) return;
+      if (!containerRef.current) return;
+      
+      const resizeObserver = new ResizeObserver(entries => {
+         for (const entry of entries) {
+            const { width: containerWidth, height: containerHeight } = entry.contentRect;
+            // Use container size if available, otherwise fall back to props
+            const actualWidth = containerWidth > 0 ? containerWidth : width;
+            const actualHeight = containerHeight > 0 ? containerHeight : height;
+            setDimensions({ width: actualWidth, height: actualHeight });
+         }
+      });
+      
+      resizeObserver.observe(containerRef.current);
+      return () => resizeObserver.disconnect();
+   }, [width, height]);
 
-      // Setup SVG container
-      const svg = d3
-         .select(svgRef.current)
-         .attr('width', width)
-         .attr('height', height)
-         .attr('viewBox', `0 0 ${width} ${height}`)
-         .style('overflow', 'visible');
+   // Initialize Canvas contexts (T065-T070)
+   useEffect(() => {
+      if (!dataLayerRef.current || !polygonLayerRef.current) return;
 
-      svg.selectAll('*').remove();
+      const dataCtx = setupCanvas(dataLayerRef.current, innerWidth, innerHeight);
+      const polygonCtx = setupCanvas(polygonLayerRef.current, innerWidth, innerHeight);
 
-      // Create chart group
-      const g = svg
-         .append('g')
-         .attr('transform', `translate(${margin.left},${margin.top})`)
-         .attr('width', innerWidth)
-         .attr('height', innerHeight);
+      dispatch({
+         type: 'SET_CANVAS_LAYERS',
+         layers: {
+            dataPoints: {
+               canvas: dataLayerRef.current,
+               context: dataCtx,
+               zIndex: 0,
+               clearOnRender: true,
+               devicePixelRatio: window.devicePixelRatio || 1,
+               dirtyRects: [],
+            },
+            polygonOverlay: {
+               canvas: polygonLayerRef.current,
+               context: polygonCtx,
+               zIndex: 1,
+               clearOnRender: true,
+               devicePixelRatio: window.devicePixelRatio || 1,
+               dirtyRects: [],
+            },
+         },
+      });
+   }, [innerWidth, innerHeight, dispatch]);
 
-      // Add axes
-      const xAxis = g
-         .append('g')
-         .attr('class', styles['x-axis'])
-         .attr('transform', `translate(0,${innerHeight})`)
-         .call(d3.axisBottom(x));
+   // Build spatial index (T073-T074) - stable callback
+   const getBounds = useCallback((point: CellData) => ({ x: point.x, y: point.y }), []);
+   const spatialIndexHook = useSpatialIndex(data, getBounds);
 
-      xAxis
-         .append('text')
-         .attr('x', innerWidth / 2)
-         .attr('y', margin.bottom + 40)
-         .attr('text-anchor', 'middle')
-         .attr('fill', 'black')
-         .attr('font-size', '14px')
-         .text('CD45-KrO');
+   useEffect(() => {
+      if (spatialIndexHook && spatialIndexHook !== spatialIndex) {
+         dispatch({ type: 'REBUILD_SPATIAL_INDEX', index: spatialIndexHook });
+      }
+   }, [spatialIndexHook, spatialIndex, dispatch]);
 
-      const yAxis = g.append('g').attr('class', styles['y-axis']).call(d3.axisLeft(y));
-
-      yAxis
-         .append('text')
-         .attr('transform', 'rotate(-90)')
-         .attr('x', -innerHeight / 2)
-         .attr('y', -margin.left - 40)
-         .attr('text-anchor', 'middle')
-         .attr('fill', 'black')
-         .attr('font-size', '14px')
-         .text('SS INT LIN');
-
-      // Add data points
-      g.selectAll<SVGCircleElement, CellData>('circle.data-point')
-         .data(data)
-         .join('circle')
-         .attr('class', 'data-point')
-         .attr('cx', (d) => x(d.x))
-         .attr('cy', (d) => y(d.y))
-         .attr('r', 1)
-         .attr('fill', (d) => {
-            // Check if point is inside any polygon and use that polygon's dot color
-            const point: [number, number] = [x(d.x), y(d.y)];
-            for (const polygon of polygons) {
-               if (
-                  polygon.isVisible &&
-                  d3.polygonContains(
-                     polygon.points.map((p) => [p.x, p.y]),
-                     point
-                  )
-               ) {
-                  return polygon.dot || 'white';
-               }
-            }
-            return 'white';
-         })
-         .attr('fill-opacity', 0.4);
-
-      setGroupSelection(g);
-
-      dispatch({ type: 'SET_SCALES', scales: { xScale: x, yScale: y } });
-
-      return () => {
-         svg.selectAll('*').remove();
-         setGroupSelection(null);
+   // Initialize viewport (T075-T076) - only once
+   useEffect(() => {
+      if (viewport) return; // Skip if already initialized
+      
+      const initialViewport: Viewport = {
+         minX: 200 as DataX,
+         maxX: 1000 as DataX,
+         minY: 0 as DataY,
+         maxY: 1000 as DataY,
+         scale: 1.0,
+         translateX: 0,
+         translateY: 0,
       };
-   }, [
-      data,
-      width,
-      height,
-      innerWidth,
-      innerHeight,
-      margin.left,
-      margin.top,
-      margin.bottom,
-      polygons,
-      dispatch,
-   ]);
+      dispatch({ type: 'SET_VIEWPORT', viewport: initialViewport });
+   }, [viewport, dispatch]);
 
-   // Modify return statement
+   // Create coordinate transform (T071-T072) with stable references
+   const dataDomain = useMemo(() => ({ x: [200, 1000] as [number, number], y: [0, 1000] as [number, number] }), []);
+   const screenRange = useMemo(() => ({ x: [0, innerWidth] as [number, number], y: [innerHeight, 0] as [number, number] }), [innerWidth, innerHeight]);
+   
+   const transform = useCoordinateTransform(dataDomain, screenRange, viewport);
+
+   useEffect(() => {
+      if (transform && transform !== coordinateTransform) {
+         dispatch({ type: 'SET_COORDINATE_TRANSFORM', transform });
+      }
+   }, [transform, coordinateTransform, dispatch]);
+
+   // Get visible points via viewport culling (T077) - reuse getBounds
+   const visiblePoints = useViewportCulling(
+      data,
+      viewport,
+      spatialIndex,
+      getBounds
+   );
+
+   // Calculate polygon selection (T110)
+   const selectionMap = usePolygonSelection(
+      data,
+      polygons.map(p => ({ id: p.id, points: p.points, isVisible: p.isVisible })),
+      transform
+   );
+
+   // Render data points (T078-T082, T111-T115)
+   useEffect(() => {
+      if (!dataLayerRef.current || !transform) return;
+
+      if (data.length === 0) return;
+
+      const ctx = dataLayerRef.current.getContext('2d');
+      if (!ctx) return;
+
+      // Pre-filter visible polygons
+      const visiblePolygons = polygons.filter(p => p.isVisible && selectionMap[p.id]);
+
+      // Performance monitoring
+      const startTime = performance.now();
+
+      const frameId = requestAnimationFrame(() => {
+         // Clear canvas
+         clearCanvas(ctx, innerWidth, innerHeight);
+
+         // Render all data points with selection feedback
+         data.forEach((point, dataIndex) => {
+            const screenPos = transform.toScreen({ x: point.x as DataX, y: point.y as DataY });
+            
+            // Check which polygons contain this point (T112) - optimized
+            const containingPolygons = visiblePolygons.filter(polygon => 
+               selectionMap[polygon.id]?.includes(dataIndex)
+            );
+
+            // Determine colors based on selection (T113-T114)
+            if (containingPolygons.length > 0) {
+               // Use first polygon's dot color as base
+               const dotColor = containingPolygons[0].dot || 'white';
+               
+               // Render base dot (T113)
+               ctx.fillStyle = dotColor;
+               ctx.globalAlpha = 0.4;
+               ctx.beginPath();
+               ctx.arc(screenPos.x, screenPos.y, 1, 0, Math.PI * 2);
+               ctx.fill();
+
+               // Render polygon overlays with additive blending (T114-T115)
+               containingPolygons.forEach(polygon => {
+                  if (polygon.color) {
+                     ctx.fillStyle = polygon.color;
+                     ctx.globalAlpha = 0.2;
+                     ctx.beginPath();
+                     ctx.arc(screenPos.x, screenPos.y, 1, 0, Math.PI * 2);
+                     ctx.fill();
+                  }
+               });
+            } else {
+               // Render unselected point
+               ctx.fillStyle = 'white';
+               ctx.globalAlpha = 0.4;
+               ctx.beginPath();
+               ctx.arc(screenPos.x, screenPos.y, 1, 0, Math.PI * 2);
+               ctx.fill();
+            }
+
+            ctx.globalAlpha = 1.0; // Reset
+         });
+
+         const endTime = performance.now();
+         const renderTime = endTime - startTime;
+         console.log(`[Performance] Rendered ${data.length} points in ${renderTime.toFixed(2)}ms`);
+      });
+
+      return () => cancelAnimationFrame(frameId);
+   }, [data, polygons, transform, innerWidth, innerHeight, selectionMap]);
+
+   // Render polygons (T102-T109)
+   useEffect(() => {
+      if (!polygonLayerRef.current) return;
+
+      const ctx = polygonLayerRef.current.getContext('2d');
+      if (!ctx) return;
+
+      const visiblePolygons = polygons.filter(p => p.isVisible && p.points && p.points.length >= 3);
+
+      const frameId = requestAnimationFrame(() => {
+         // Clear polygon layer
+         clearCanvas(ctx, innerWidth, innerHeight);
+
+         // Render finished polygons only
+         visiblePolygons.forEach(polygon => {
+            // Render fill
+            if (polygon.color) {
+               renderPolygonFill(ctx, polygon.points, polygon.color, 0.2);
+            }
+
+            // Render stroke
+            const strokeColor = polygon.line || polygon.color || '#808080';
+            renderPolygonStroke(ctx, polygon.points, strokeColor, 2);
+         });
+      });
+
+      return () => cancelAnimationFrame(frameId);
+   }, [polygons, innerWidth, innerHeight]);
+
+   // Keep D3 scales for backward compatibility with Polygon component - memoized
+   const xScale = useMemo(() => 
+      d3.scaleLinear().domain([200, 1000]).range([0, innerWidth]),
+      [innerWidth]
+   );
+   const yScale = useMemo(() => 
+      d3.scaleLinear().domain([0, 1000]).range([innerHeight, 0]),
+      [innerHeight]
+   );
+
+   useEffect(() => {
+      dispatch({ type: 'SET_SCALES', scales: { xScale, yScale } });
+   }, [dispatch, xScale, yScale]);
+
    if (!isMounted) return null;
 
    return (
-      <div className={styles.chartContainerLeft}>
+      <div ref={containerRef} className={styles.chartContainer} style={{ minWidth: width, minHeight: height }}>
          {loading ? (
             <div>Loading...</div>
          ) : (
             <>
-               <svg ref={svgRef} />
-               {groupSelection && (
-                  <Polygon g={groupSelection} data={data} xScale={x} yScale={y} margin={margin} />
-               )}
+               {/* Layer 0: Data points */}
+               <canvas
+                  ref={dataLayerRef}
+                  className={styles.dataLayer}
+                  width={innerWidth}
+                  height={innerHeight}
+                  style={{ position: 'absolute', zIndex: 0, left: margin.left, top: margin.top }}
+               />
+
+               {/* Layer 1: Polygon overlays */}
+               <canvas
+                  ref={polygonLayerRef}
+                  className={styles.polygonLayer}
+                  width={innerWidth}
+                  height={innerHeight}
+                  style={{ position: 'absolute', zIndex: 1, left: margin.left, top: margin.top }}
+               />
+
+               {/* Layer 2: Interaction (SVG overlay for polygon drawing) */}
+               <Polygon data={data} xScale={xScale} yScale={yScale} margin={margin} />
+
+               {/* Layer 3: Axes (SVG overlay) */}
+               <svg
+                  style={{
+                     position: 'absolute',
+                     zIndex: 3,
+                     left: 0,
+                     top: 0,
+                     pointerEvents: 'none',
+                     width: dimensions.width,
+                     height: dimensions.height
+                  }}
+               >
+                  <g transform={`translate(${margin.left},${margin.top})`}>
+                     {/* X-axis label */}
+                     <text
+                        x={innerWidth / 2}
+                        y={innerHeight + 35}
+                        textAnchor="middle"
+                        fill="#666"
+                        fontSize="14px"
+                        fontWeight="bold"
+                     >
+                        CD45-KrO
+                     </text>
+
+                     {/* Y-axis label */}
+                     <text
+                        x={-innerHeight / 2}
+                        y={-35}
+                        textAnchor="middle"
+                        fill="#666"
+                        fontSize="14px"
+                        fontWeight="bold"
+                        transform={`rotate(-90, ${-innerHeight / 2}, -35)`}
+                     >
+                        SS INT LIN
+                     </text>
+
+                     {/* X-axis tick labels */}
+                     {[200, 400, 600, 800, 1000].map(value => (
+                        <text
+                           key={`x-${value}`}
+                           x={xScale(value)}
+                           y={innerHeight + 20}
+                           textAnchor="middle"
+                           fill="#666"
+                           fontSize="12px"
+                        >
+                           {value}
+                        </text>
+                     ))}
+
+                     {/* Y-axis tick labels */}
+                     {[0, 200, 400, 600, 800, 1000].map(value => (
+                        <text
+                           key={`y-${value}`}
+                           x={-10}
+                           y={yScale(value)}
+                           textAnchor="end"
+                           fill="#666"
+                           fontSize="12px"
+                           dominantBaseline="middle"
+                        >
+                           {value}
+                        </text>
+                     ))}
+                  </g>
+               </svg>
             </>
          )}
       </div>
