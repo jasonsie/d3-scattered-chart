@@ -256,9 +256,6 @@ export default function Chart({ width = 800, height = 600 }: ChartProps) {
 
          ctx.globalAlpha = 1.0; // Reset
 
-         const endTime = performance.now();
-         const renderTime = endTime - startTime;
-         console.log(`[Performance] Rendered ${data.length} points in ${renderTime.toFixed(2)}ms`);
       });
 
       return () => cancelAnimationFrame(frameId);
