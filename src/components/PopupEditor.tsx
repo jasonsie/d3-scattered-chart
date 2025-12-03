@@ -1,83 +1,88 @@
 'use client';
 
-interface PopupEditorProps {
-  label: string;
-  color: string;
-  line?: string;
-  dot?: string;
-  onSave: (newLabel: string, newColor: string, newLine: string, newDot: string) => void;
-  onClose: () => void;
-}
+import type { PopupEditorProps } from '@/types/components';
+import styles from '@/styles/PopupEditor.module.css';
 
+/**
+ * Polygon property editor modal component.
+ * 
+ * Displays a modal dialog for editing polygon properties including label, fill color,
+ * line style, and dot color. Uses controlled inputs with default values and provides
+ * save/cancel actions.
+ * 
+ * @param {PopupEditorProps} props - Component props
+ * @param {string} props.label - Initial polygon label text
+ * @param {string} props.color - Initial fill color (hex format)
+ * @param {string} props.line - Initial line style ('solid', 'dashed', 'dotted')
+ * @param {string} props.dot - Initial dot color (hex format)
+ * @param {Function} props.onSave - Callback when user saves changes, receives PolygonStyle object
+ * @param {Function} props.onClose - Callback when user cancels or closes modal
+ * 
+ * @returns {JSX.Element} Modal overlay with form inputs
+ * 
+ * @example
+ * <PopupEditor
+ *   label="Region 1"
+ *   color="#3b82f6"
+ *   line="solid"
+ *   dot="#ffffff"
+ *   onSave={(data) => updatePolygon(data)}
+ *   onClose={() => setEditorOpen(false)}
+ * />
+ */
 export default function PopupEditor({ 
   label, 
-  color = '#808080',
-  line = 'solid', 
-  dot = '#ffffff',
+  color,
+  line, 
+  dot,
   onSave, 
   onClose 
 }: PopupEditorProps) {
   return (
-    <div style={{
-      position: 'fixed',
-      top: '50%',
-      left: '50%',
-      transform: 'translate(-50%, -50%)',
-      backgroundColor: 'white',
-      padding: '20px',
-      borderRadius: '8px',
-      boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
-      zIndex: 1000,
-      minWidth: '300px'
-    }}>
-      <div style={{ marginBottom: '15px' }}>
-        <label style={{ display: 'block', marginBottom: '5px' }}>Label:</label>
+    <div className={styles.modal}>
+      <div className={styles.inputGroup}>
+        <label className={styles.inputLabel}>Label:</label>
         <input 
           type="text" 
           defaultValue={label}
           id="labelInput"
-          style={{ width: '100%', padding: '5px', marginBottom: '10px' }}
+          className={styles.inputField}
         />
       </div>
-      <div style={{ marginBottom: '15px' }}>
-        <label style={{ display: 'block', marginBottom: '5px' }}>Fill Color:</label>
+      <div className={styles.inputGroup}>
+        <label className={styles.inputLabel}>Fill Color:</label>
         <input 
           type="color" 
           defaultValue={color}
           id="colorInput"
-          style={{ width: '100%', height: '40px' }}
+          className={styles.inputField}
         />
       </div>
-      <div style={{ marginBottom: '15px' }}>
-        <label style={{ display: 'block', marginBottom: '5px' }}>Line Style:</label>
+      <div className={styles.inputGroup}>
+        <label className={styles.inputLabel}>Line Style:</label>
         <select
           id="lineInput"
           defaultValue={line}
-          style={{ width: '100%', padding: '5px' }}
+          className={styles.inputField}
         >
           <option value="solid">Solid</option>
           <option value="dashed">Dashed</option>
           <option value="dotted">Dotted</option>
         </select>
       </div>
-      <div style={{ marginBottom: '15px' }}>
-        <label style={{ display: 'block', marginBottom: '5px' }}>Dot Color:</label>
+      <div className={styles.inputGroup}>
+        <label className={styles.inputLabel}>Dot Color:</label>
         <input 
           type="color" 
           defaultValue={dot}
           id="dotInput"
-          style={{ width: '100%', height: '40px' }}
+          className={styles.inputField}
         />
       </div>
-      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+      <div className={styles.buttonGroup}>
         <button 
           onClick={onClose}
-          style={{
-            padding: '5px 10px',
-            border: '1px solid #ccc',
-            borderRadius: '4px',
-            background: 'white'
-          }}
+          className={styles.cancelButton}
         >
           Cancel
         </button>
@@ -87,15 +92,9 @@ export default function PopupEditor({
             const newColor = (document.getElementById('colorInput') as HTMLInputElement).value;
             const newLine = (document.getElementById('lineInput') as HTMLSelectElement).value;
             const newDot = (document.getElementById('dotInput') as HTMLInputElement).value;
-            onSave(newLabel, newColor, newLine, newDot);
+            onSave({ label: newLabel, color: newColor, line: newLine, dot: newDot });
           }}
-          style={{
-            padding: '5px 10px',
-            border: 'none',
-            borderRadius: '4px',
-            background: '#007bff',
-            color: 'white'
-          }}
+          className={styles.saveButton}
         >
           Save
         </button>

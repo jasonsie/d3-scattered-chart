@@ -2,26 +2,35 @@
 
 import { createContext, useContext, useReducer, ReactNode, useEffect } from 'react';
 import { CellData, loadCsvData } from '@/utils/data/loadCsvData';
-import { Point, Polygon } from '@/components/Polygon';
+import type { Point, Polygon } from '@/types/components';
 import * as d3 from 'd3';
+import type { Viewport, CanvasLayer, CoordinateTransform, SpatialIndex } from '@/types/canvas';
 
 // Types
 type ShowPopup = 
-   | { id: number; value: true }
+   | { id: string; value: true }
    | { id: null; value: false };
 interface ChartState {
    data: CellData[];
    polygons: Polygon[];
    currentPoints: Point[];
-   selectedPolygonId: number[];
+   selectedPolygonId: string[];
    isDrawing: boolean;
    showPopup: ShowPopup;
    loading: boolean;
-   checkedPolygons: number[];
+   checkedPolygons: string[];
    scales: {
       xScale: d3.ScaleLinear<number, number>;
       yScale: d3.ScaleLinear<number, number>;
    } | null;
+   // Canvas-specific state
+   viewport: Viewport | null;
+   spatialIndex: SpatialIndex | null;
+   canvasLayers: {
+      dataPoints: CanvasLayer | null;
+      polygonOverlay: CanvasLayer | null;
+   };
+   coordinateTransform: CoordinateTransform | null;
 }
 
 
@@ -31,19 +40,27 @@ type ChartAction =
    | { type: 'SET_CURRENT_POINTS'; points: Point[] }
    | {
         type: 'UPDATE_POLYGON';
-        id: number;
+        id: string;
         newLabel?: string;
         newColor?: string;
         isVisible?: boolean;
         line?: string;
         dot?: string;
      }
-   | { type: 'SET_SELECTED_POLYGON'; id: number  }
+   | { type: 'SET_SELECTED_POLYGON'; id: string  }
    | { type: 'SET_SHOW_POPUP'; show: ShowPopup }
    | { type: 'SET_LOADING'; loading: boolean }
    | { type: 'SET_DRAWING'; isDrawing: boolean }
-   | { type: 'DELETE_POLYGON'; id: number }
-   | { type: 'SET_SCALES'; scales: { xScale: d3.ScaleLinear<number, number>; yScale: d3.ScaleLinear<number, number> } };
+   | { type: 'DELETE_POLYGON'; id: string }
+   | { type: 'SET_SCALES'; scales: { xScale: d3.ScaleLinear<number, number>; yScale: d3.ScaleLinear<number, number> } }
+   // Canvas-specific actions
+   | { type: 'SET_VIEWPORT'; viewport: Viewport }
+   | { type: 'SET_CANVAS_LAYERS'; layers: { dataPoints?: CanvasLayer; polygonOverlay?: CanvasLayer } }
+   | { type: 'SET_COORDINATE_TRANSFORM'; transform: CoordinateTransform }
+   | { type: 'REBUILD_SPATIAL_INDEX'; index: SpatialIndex }
+   | { type: 'INVALIDATE_RECT'; rect: DOMRect; layer: 'dataPoints' | 'polygonOverlay' }
+   | { type: 'PAN'; deltaX: number; deltaY: number }
+   | { type: 'ZOOM'; scale: number; centerX: number; centerY: number };
 
 /**
  * Initial state
@@ -64,6 +81,14 @@ const initialState: ChartState = {
    loading: true,
    checkedPolygons: [],
    scales: null,
+   // Canvas-specific initial state
+   viewport: null,
+   spatialIndex: null,
+   canvasLayers: {
+      dataPoints: null,
+      polygonOverlay: null,
+   },
+   coordinateTransform: null,
 };
 
 // Context creation
@@ -76,7 +101,12 @@ function chartReducer(state: ChartState, action: ChartAction): ChartState {
       case 'INIT':
          return { ...state, data: action.data };
       case 'SET_POLYGONS':
-         return { ...state, polygons: action.polygons };
+         // Enforce maximum 50 polygons limit (T139)
+         const limitedPolygons = action.polygons.slice(0, 50);
+         if (action.polygons.length > 50) {
+            console.warn(`Maximum polygon limit (50) reached. Only first 50 polygons will be kept.`);
+         }
+         return { ...state, polygons: limitedPolygons };
       case 'SET_CURRENT_POINTS':
          return { ...state, currentPoints: action.points };
       case 'UPDATE_POLYGON':
@@ -118,6 +148,55 @@ function chartReducer(state: ChartState, action: ChartAction): ChartState {
          };
       case 'SET_SCALES':
          return { ...state, scales: action.scales };
+      // Canvas-specific action handlers
+      case 'SET_VIEWPORT':
+         return { ...state, viewport: action.viewport };
+      case 'SET_CANVAS_LAYERS':
+         return {
+            ...state,
+            canvasLayers: {
+               dataPoints: action.layers.dataPoints ?? state.canvasLayers.dataPoints,
+               polygonOverlay: action.layers.polygonOverlay ?? state.canvasLayers.polygonOverlay,
+            },
+         };
+      case 'SET_COORDINATE_TRANSFORM':
+         return { ...state, coordinateTransform: action.transform };
+      case 'REBUILD_SPATIAL_INDEX':
+         return { ...state, spatialIndex: action.index };
+      case 'INVALIDATE_RECT':
+         // Add dirty rect to the specified layer
+         return {
+            ...state,
+            canvasLayers: {
+               ...state.canvasLayers,
+               [action.layer]: state.canvasLayers[action.layer]
+                  ? {
+                       ...state.canvasLayers[action.layer]!,
+                       dirtyRects: [...state.canvasLayers[action.layer]!.dirtyRects, action.rect],
+                    }
+                  : null,
+            },
+         };
+      case 'PAN':
+         if (!state.viewport) return state;
+         return {
+            ...state,
+            viewport: {
+               ...state.viewport,
+               translateX: state.viewport.translateX + action.deltaX,
+               translateY: state.viewport.translateY + action.deltaY,
+            },
+         };
+      case 'ZOOM':
+         if (!state.viewport) return state;
+         return {
+            ...state,
+            viewport: {
+               ...state.viewport,
+               scale: action.scale,
+               // Note: Zoom centering logic will be implemented in the component
+            },
+         };
       default:
          return state;
    }

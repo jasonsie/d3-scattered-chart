@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import * as d3 from 'd3';
-import { useChartDispatch, useChartState } from '@contexts/ChartContext';
+import { useChartDispatch, useChartState } from '@/contexts/ChartContext';
+import { COLORS } from '@/utils/constants/colors';
+import styles from '@/styles/Sidebar.module.css';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import ListItemIcon from '@mui/material/ListItemIcon';
@@ -14,6 +16,30 @@ import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 
+/**
+ * Sidebar component for displaying polygon list and statistics.
+ * 
+ * Displays a list of all polygons with controls for selection, visibility toggle,
+ * editing, and deletion. Shows statistics for selected polygons including OR (union)
+ * and AND (intersection) calculations of data points contained within polygons.
+ * 
+ * State Management:
+ * - Uses ChartContext for polygon data and selection state
+ * - Calculates statistics dynamically based on selected polygons
+ * - Uses D3.js polygonContains for point-in-polygon testing
+ * 
+ * Interaction Patterns:
+ * - Checkbox: Toggle polygon selection for statistics
+ * - Eye icon: Toggle polygon visibility on chart
+ * - Edit icon: Open PopupEditor for polygon properties
+ * - Delete icon: Remove polygon from chart
+ * 
+ * @returns {JSX.Element} Sidebar with polygon list and statistics
+ * 
+ * @example
+ * // Typically used inside Chart component
+ * <Sidebar />
+ */
 export default function Sidebar() {
    const { polygons, selectedPolygonId, data, scales } = useChartState();
    const dispatch = useChartDispatch();
@@ -22,7 +48,7 @@ export default function Sidebar() {
       and: { count: number; percentage: number } | null;
    } | null>(null);
 
-   const handleToggle = (id: number) => () => {
+   const handleToggle = (id: string) => () => {
       dispatch({ type: 'SET_SELECTED_POLYGON', id });
    };
 
@@ -46,7 +72,7 @@ export default function Sidebar() {
       // Calculate OR (union)
       const totalPoints = new Set();
       selectedPolygons.forEach((polygon) => {
-         const pointsArray = polygon.points.map((p) => [p.x, p.y] as [number, number]);
+         const pointsArray = polygon.points.map((p: { x: number; y: number }) => [p.x, p.y] as [number, number]);
          data.forEach((d, index) => {
             const testPoint: [number, number] = [scales.xScale(d.x), scales.yScale(d.y)];
             if (d3.polygonContains(pointsArray, testPoint)) {
@@ -61,7 +87,7 @@ export default function Sidebar() {
          data.forEach((d, index) => {
             const testPoint: [number, number] = [scales.xScale(d.x), scales.yScale(d.y)];
             const isInAll = selectedPolygons.every((polygon) => {
-               const pointsArray = polygon.points.map((p) => [p.x, p.y] as [number, number]);
+               const pointsArray = polygon.points.map((p: { x: number; y: number }) => [p.x, p.y] as [number, number]);
                return d3.polygonContains(pointsArray, testPoint);
             });
             if (isInAll) commonPoints.add(index);

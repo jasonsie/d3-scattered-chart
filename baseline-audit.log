@@ -1,0 +1,4 @@
+yarn audit v1.22.22
+info No lockfile found.
+error Received malformed response from registry for "@next%2fenv". The registry may be down.
+info Visit https://yarnpkg.com/en/docs/cli/audit for documentation about this command.

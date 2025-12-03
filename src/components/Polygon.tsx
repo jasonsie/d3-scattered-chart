@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import * as d3 from 'd3';
 import PopupEditor from './PopupEditor';
 import { useChartState, useChartDispatch } from '@/contexts/ChartContext';
 
 export interface PolygonProps {
-   g: d3.Selection<SVGGElement, unknown, null, undefined>;
+   g?: d3.Selection<SVGGElement, unknown, null, undefined>; // Made optional for Canvas mode
    onSelectionChange?: (selectedPoints: Array<Point>) => void;
    data: Array<Point>;
    xScale: d3.ScaleLinear<number, number>;
@@ -16,7 +16,7 @@ export interface PolygonProps {
 
 export type Point = { x: number; y: number };
 export type Polygon = {
-   id: number;
+   id: string;
    label: string;
    points: Point[];
    isVisible: boolean;
@@ -45,28 +45,50 @@ export default function Polygon({ g, data, xScale, yScale, margin }: PolygonProp
    const { polygons, currentPoints, selectedPolygonId, isDrawing, showPopup } = useChartState();
    const dispatch = useChartDispatch();
 
+   // Create SVG if g is not provided (Canvas mode)
+   const svgRef = useRef<SVGSVGElement>(null);
+   const gRef = useRef<d3.Selection<SVGGElement, unknown, null, undefined> | null>(null);
+
    useEffect(() => {
-      const drawingGroup = setupDrawingGroup();
+      // If g is not provided, create our own SVG overlay
+      if (!g && svgRef.current) {
+         const svg = d3.select(svgRef.current);
+         svg.selectAll('*').remove();
+         
+         // No transform needed - SVG is already positioned with margin offset
+         const newG = svg.append('g');
+         
+         gRef.current = newG;
+      } else {
+         gRef.current = g || null;
+      }
+   }, [g, margin]);
+
+   useEffect(() => {
+      const currentG = gRef.current;
+      if (!currentG) return;
+
+      const drawingGroup = setupDrawingGroup(currentG);
       const finishedPolygonsGroup = setupFinishedPolygonsGroup(drawingGroup);
       const { polygon } = setupDrawingElements(drawingGroup);
 
       // Get SVG container for event handling
-      const svg = g.node()?.ownerSVGElement;
+      const svg = currentG.node()?.ownerSVGElement;
       if (!svg) return;
 
       // Attach event listeners
-      attachEventListeners(svg, drawingGroup);
+      attachEventListeners(svg, drawingGroup, currentG);
 
       // Initial render
-      updatePolygons(false, polygon, finishedPolygonsGroup);
+      updatePolygons(false, polygon, finishedPolygonsGroup, currentG);
 
       // Cleanup
       return () => cleanupDrawing(svg, drawingGroup);
-   }, [g, currentPoints, isDrawing, polygons, selectedPolygonId]);
+   }, [gRef.current, currentPoints, isDrawing, polygons, selectedPolygonId]);
 
    // Setup Functions
-   const setupDrawingGroup = () => {
-      return g.append('g').attr('class', 'drawing-group');
+   const setupDrawingGroup = (chartG: d3.Selection<SVGGElement, unknown, null, undefined>) => {
+      return chartG.append('g').attr('class', 'drawing-group');
    };
 
    const setupFinishedPolygonsGroup = (
@@ -101,14 +123,15 @@ export default function Polygon({ g, data, xScale, yScale, margin }: PolygonProp
    // Event Handlers
    const handleMouseMove = (
       event: MouseEvent,
-      previewLine: d3.Selection<SVGLineElement, unknown, null, undefined>
+      previewLine: d3.Selection<SVGLineElement, unknown, null, undefined>,
+      chartG: d3.Selection<SVGGElement, unknown, null, undefined>
    ) => {
       if (!isDrawing || !currentPoints.length) return;
 
-      const [mouseX, mouseY] = d3.pointer(event, g.node());
+      const [mouseX, mouseY] = d3.pointer(event, chartG.node());
       const current = {
-         x: mouseX - margin.left,
-         y: mouseY - margin.top,
+         x: mouseX,
+         y: mouseY,
       };
 
       previewLine
@@ -119,11 +142,14 @@ export default function Polygon({ g, data, xScale, yScale, margin }: PolygonProp
          .attr('y2', current.y);
    };
 
-   const handleMouseDown = (event: MouseEvent) => {
-      const [mouseX, mouseY] = d3.pointer(event, g.node());
+   const handleMouseDown = (
+      event: MouseEvent,
+      chartG: d3.Selection<SVGGElement, unknown, null, undefined>
+   ) => {
+      const [mouseX, mouseY] = d3.pointer(event, chartG.node());
       const newPoint = {
-         x: mouseX - margin.left,
-         y: mouseY - margin.top,
+         x: mouseX,
+         y: mouseY,
       };
 
       if (!isDrawing) {
@@ -159,10 +185,11 @@ export default function Polygon({ g, data, xScale, yScale, margin }: PolygonProp
       const startPoint = currentPoints[0];
       const distance = Math.hypot(startPoint.x - point.x, startPoint.y - point.y);
 
-      if (distance < 10 && currentPoints.length > 2) {
+      // Check if clicking near the start point (within 15 pixels for easier closing)
+      if (distance < 15 && currentPoints.length > 2) {
          const stats = calculatePolygonStats(currentPoints);
          const newPolygon: Polygon = {
-            id: Date.now(),
+            id: String(Date.now()),
             label: `Group-${polygons.length + 1}`,
             points: currentPoints,
             isVisible: true,
@@ -183,10 +210,11 @@ export default function Polygon({ g, data, xScale, yScale, margin }: PolygonProp
    const updatePolygons = (
       close: boolean,
       polygon: d3.Selection<SVGPathElement, unknown, null, undefined>,
-      finishedPolygonsGroup: d3.Selection<SVGGElement, unknown, null, undefined>
+      finishedPolygonsGroup: d3.Selection<SVGGElement, unknown, null, undefined>,
+      chartG: d3.Selection<SVGGElement, unknown, null, undefined>
    ) => {
       renderFinishedPolygons(finishedPolygonsGroup);
-      renderCurrentPolygon(close, polygon);
+      renderCurrentPolygon(close, polygon, chartG);
    };
 
    const renderFinishedPolygons = (group: d3.Selection<SVGGElement, unknown, null, undefined>) => {
@@ -382,7 +410,8 @@ export default function Polygon({ g, data, xScale, yScale, margin }: PolygonProp
 
    const renderCurrentPolygon = (
       close: boolean,
-      polygon: d3.Selection<SVGPathElement, unknown, null, undefined>
+      polygon: d3.Selection<SVGPathElement, unknown, null, undefined>,
+      chartG: d3.Selection<SVGGElement, unknown, null, undefined>
    ) => {
       if (currentPoints.length === 0) return;
 
@@ -392,11 +421,11 @@ export default function Polygon({ g, data, xScale, yScale, margin }: PolygonProp
          .y((d) => d.y);
 
       polygon.attr('d', lineGenerator(currentPoints) + (close ? 'Z' : ''));
-      renderCurrentVertices();
+      renderCurrentVertices(chartG);
    };
 
-   const renderCurrentVertices = () => {
-      const circles = g
+   const renderCurrentVertices = (chartG: d3.Selection<SVGGElement, unknown, null, undefined>) => {
+      const circles = chartG
          .select('.drawing-group')
          .selectAll<SVGCircleElement, Point>('circle.vertex')
          .data(currentPoints);
@@ -410,10 +439,11 @@ export default function Polygon({ g, data, xScale, yScale, margin }: PolygonProp
          .merge(circles as d3.Selection<SVGCircleElement, Point, SVGGElement, unknown>)
          .attr('cx', (d) => d.x)
          .attr('cy', (d) => d.y)
-         .attr('r', 4)
-         .attr('fill', 'white') // Changed to black
-         .attr('fill-opacity', '0.8') // Set opacity to 0.8
-         .attr('stroke', 'none') // Removed stroke
+         .attr('r', (d, i) => i === 0 ? 8 : 4) // Make first point larger
+         .attr('fill', (d, i) => i === 0 ? 'lime' : 'white') // Make first point green
+         .attr('fill-opacity', (d, i) => i === 0 ? '0.9' : '0.8')
+         .attr('stroke', (d, i) => i === 0 ? 'white' : 'none') // Add white stroke to first point
+         .attr('stroke-width', (d, i) => i === 0 ? 2 : 0)
          .attr('is-handle', 'true')
          .style('cursor', 'pointer');
    };
@@ -421,12 +451,13 @@ export default function Polygon({ g, data, xScale, yScale, margin }: PolygonProp
    // Event Setup and Cleanup
    const attachEventListeners = (
       svg: SVGSVGElement,
-      drawingGroup: d3.Selection<SVGGElement, unknown, null, undefined>
+      drawingGroup: d3.Selection<SVGGElement, unknown, null, undefined>,
+      chartG: d3.Selection<SVGGElement, unknown, null, undefined>
    ) => {
       const previewLine = drawingGroup.select<SVGLineElement>('line.preview');
       d3.select(svg)
-         .on('mousemove', (event) => handleMouseMove(event, previewLine))
-         .on('mousedown', handleMouseDown);
+         .on('mousemove', (event) => handleMouseMove(event, previewLine, chartG))
+         .on('mousedown', (event) => handleMouseDown(event, chartG));
    };
 
    const cleanupDrawing = (
@@ -438,7 +469,7 @@ export default function Polygon({ g, data, xScale, yScale, margin }: PolygonProp
    };
 
    // Add new function to handle polygon selection
-   const handlePolygonClick = (id: number) => {
+   const handlePolygonClick = (id: string) => {
       if (isDrawing) return;
       // const isSelected = selectedPolygonId.includes(id);
 
@@ -450,7 +481,7 @@ export default function Polygon({ g, data, xScale, yScale, margin }: PolygonProp
 
    // Add new function to handle polygon updates
    const handlePolygonUpdate = (
-      id: number,
+      id: string,
       newLabel: string,
       newColor: string,
       newLine: string,
@@ -472,14 +503,30 @@ export default function Polygon({ g, data, xScale, yScale, margin }: PolygonProp
 
    return (
       <>
+         {/* SVG overlay for Canvas mode */}
+         {!g && (
+            <svg
+               ref={svgRef}
+               style={{
+                  position: 'absolute',
+                  zIndex: 2,
+                  left: margin.left,
+                  top: margin.top,
+                  pointerEvents: 'all',
+                  width: xScale.range()[1],
+                  height: yScale.range()[0],
+               }}
+            />
+         )}
+         
          {showPopup.value && (
             <PopupEditor
                label={polygons.find((p) => p.id === showPopup.id)?.label || ''}
                color={polygons.find((p) => p.id === showPopup.id)?.color || '#808080'}
                line={polygons.find((p) => p.id === showPopup.id)?.line || 'solid'}
                dot={polygons.find((p) => p.id === showPopup.id)?.dot || '#ffffff'}
-               onSave={(newLabel, newColor, newLine, newDot) =>
-                  handlePolygonUpdate(showPopup.id, newLabel, newColor, newLine, newDot)
+               onSave={(data) =>
+                  handlePolygonUpdate(showPopup.id, data.label, data.color, data.line, data.dot)
                }
                onClose={() =>
                   dispatch({
