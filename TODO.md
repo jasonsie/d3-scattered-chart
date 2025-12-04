@@ -71,3 +71,69 @@
    - when rendering the chart is not ready, set global loading state to true; when chart is ready, set global loading state to false
 2. Chart View
    -   set the min-width and min-height for the chart view area, so that the chart area size doesn't change  even thought the chart is loading or not
+
+
+## Loading component
+1. css:
+```css
+iv.sphereborder {
+  width: 10rem;
+}
+div.sphereborder b {
+  top: 50%;
+  left: 50%;
+  width: 2rem;
+  height: 2rem;
+  transform: scale(0);
+  border-radius: 50%;
+  position: absolute;
+  border: 2px solid #000000;
+  animation: sphereborder 3s infinite linear;
+}
+div.sphereborder b:nth-child(1) {
+  animation-delay: 0s;
+}
+div.sphereborder b:nth-child(2) {
+  animation-delay: 0.4s;
+}
+div.sphereborder b:nth-child(3) {
+  animation-delay: 0.8s;
+}
+div.sphereborder b:nth-child(4) {
+  animation-delay: 1.2s;
+}
+
+@keyframes sphereborder {
+  0% {
+    width: 1rem;
+    height: 0.3rem;
+    transform: translate(-50%, -3rem);
+  }
+  25% {
+    width: 4rem;
+    height: 1.5rem;
+    transform: translate(-50%, -2.7rem);
+  }
+  50% {
+    width: 6rem;
+    height: 3rem;
+    transform: translate(-50%, -2rem);
+  }
+  75% {
+    width: 4rem;
+    height: 1.5rem;
+    transform: translate(-50%, 0rem);
+  }
+  100% {
+    width: 1rem;
+    height: 0.3rem;
+    transform: translate(-50%, 1rem);
+  }
+}
+```
+2. html:
+```html
+<div class="sphereborder">
+      <b></b><b></b><b></b><b></b>
+</div>
+```

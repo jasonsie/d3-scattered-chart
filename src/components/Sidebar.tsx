@@ -121,12 +121,15 @@ export default function Sidebar() {
          sx={{
             width: '100%',
             minWidth: 360,
+            height: 600,
             backgroundColor: 'rgba(29, 33, 38, 0.4)',
             borderRadius: '10px',
             border: '1px solid rgba(61, 71, 81, 0.3)',
             borderLeft: 'none',
             padding: '10px',
             color: 'white',
+            overflowY: 'auto',
+            boxSizing: 'border-box',
          }}
       >
          {/* Axis Selection Controls */}

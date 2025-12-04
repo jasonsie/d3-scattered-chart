@@ -24,7 +24,7 @@ const GlobalDispatchContext = createContext<((update: Partial<GlobalState>) => v
  * Initial global state
  */
 const INITIAL_GLOBAL_STATE: GlobalState = {
-  isLoading: false,
+  isLoading: true,
   loadingMessage: undefined,
 };
 

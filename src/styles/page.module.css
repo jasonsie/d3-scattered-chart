@@ -14,10 +14,18 @@
    gap: 20px;
 }
 
+.chartBackground {
+   position: relative;
+   width: 800px;
+   height: 600px;
+   flex-shrink: 0;
+}
+
 .chartContainer {
    display: flex;
    flex-direction: row;
    justify-content: center;
+   align-items: flex-start;
    gap: 20px;
 }
 

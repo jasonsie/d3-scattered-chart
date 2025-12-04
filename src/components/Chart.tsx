@@ -8,7 +8,6 @@ import { useChartDispatch, useChartState } from '@/contexts/ChartContext';
 import { useGlobalDispatch } from '@/contexts/GlobalContext';
 import { CellData } from '@/utils/data/loadCsvData';
 import { isValidDataPoint } from '@/utils/data/validateData';
-import { useCanvasRenderer } from '@/hooks/useCanvasRenderer';
 import { useCoordinateTransform } from '@/hooks/useCoordinateTransform';
 import { useSpatialIndex } from '@/hooks/useSpatialIndex';
 import { useViewportCulling } from '@/hooks/useViewportCulling';
@@ -17,7 +16,7 @@ import { setupCanvas } from '@/utils/canvas/devicePixelRatio';
 import { clearCanvas } from '@/utils/canvas/canvasRenderer';
 import { renderPolygonFill, renderPolygonStroke } from '@/utils/canvas/canvasRenderer';
 import type { ChartProps } from '@/types/components';
-import type { DataX, DataY, ScreenX, ScreenY, Viewport } from '@/types/canvas';
+import type { DataX, DataY,  Viewport } from '@/types/canvas';
 import { CHART_CONSTANTS, LAYER_Z_INDEX } from '@/utils/constants/chart';
 import { CHART_DIMENSIONS } from '@/utils/constants/dimensions';
 import { COLORS } from '@/utils/constants/colors';
@@ -88,7 +87,7 @@ export default function Chart({
    const innerWidth = dimensions.width - margin.left - margin.right;
    const innerHeight = dimensions.height - margin.top - margin.bottom;
 
-   useEffect(() => {
+   useEffect(() => {      
       setIsMounted(true);
    }, []);
 
@@ -406,9 +405,6 @@ export default function Chart({
 
    return (
       <div ref={containerRef} className={styles.chartContainer}>
-         {loading ? (
-            <div>Loading...</div>
-         ) : (
             <>
                {/* Layer 0: Data points */}
                <canvas
@@ -500,7 +496,6 @@ export default function Chart({
                   </g>
                </svg>
             </>
-         )}
       </div>
    );
 }
