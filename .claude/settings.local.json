@@ -10,7 +10,9 @@
       "mcp__ide__getDiagnostics",
       "Bash(yarn build:*)",
       "Bash(timeout 10 yarn dev:*)",
-      "Bash(gtimeout 10 yarn dev:*)"
+      "Bash(gtimeout 10 yarn dev:*)",
+      "Bash(pkill:*)",
+      "Bash(yarn dev)"
     ],
     "deny": [],
     "ask": []

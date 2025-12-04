@@ -138,23 +138,10 @@ export default function Chart({
       });
    }, [innerWidth, innerHeight, dispatch]);
 
-   // Build spatial index (T021) - rebuild when axis properties change
-   const getBounds = useCallback((point: CellData) => ({
-      x: point[axisConfig.xProperty],
-      y: point[axisConfig.yProperty]
-   }), [axisConfig.xProperty, axisConfig.yProperty]);
-   const spatialIndexHook = useSpatialIndex(data, getBounds);
-
-   useEffect(() => {
-      if (spatialIndexHook && spatialIndexHook !== spatialIndex) {
-         dispatch({ type: 'REBUILD_SPATIAL_INDEX', index: spatialIndexHook });
-      }
-   }, [spatialIndexHook, spatialIndex, dispatch]);
-
    // Initialize viewport (T075-T076) - only once
    useEffect(() => {
       if (viewport) return; // Skip if already initialized
-      
+
       const initialViewport: Viewport = {
          minX: CHART_CONSTANTS.DATA_DOMAIN_X[0] as DataX,
          maxX: CHART_CONSTANTS.DATA_DOMAIN_X[1] as DataX,
@@ -173,38 +160,60 @@ export default function Chart({
       [data, axisConfig.xProperty, axisConfig.yProperty]
    );
 
-   // Create D3 scales with unit scaling applied (T023, T030-T031)
-   const xScale = useMemo(() => {
-      if (validData.length === 0) return d3.scaleLinear().domain([0, 1]).range([0, innerWidth]);
-
-      const xExtent = d3.extent(validData, d => d[axisConfig.xProperty]) as [number, number];
-      // Apply unit scale factor (T031)
+   // Filter data based on unit scale (recalculate visible data points)
+   const scaledData = useMemo(() => {
       const scaleFactor = axisConfig.unitScale / 1000;
-      const scaledDomain: [number, number] = [
-         xExtent[0] * scaleFactor,
-         xExtent[1] * scaleFactor
-      ];
+      const targetRange = 1000; // Target display range
+
+      return validData.filter(d => {
+         const scaledX = d[axisConfig.xProperty] * scaleFactor;
+         const scaledY = d[axisConfig.yProperty] * scaleFactor;
+         // Only include points within target range
+         return scaledX >= 0 && scaledX <= targetRange &&
+                scaledY >= 0 && scaledY <= targetRange;
+      });
+   }, [validData, axisConfig.xProperty, axisConfig.yProperty, axisConfig.unitScale]);
+
+   // Create D3 scales based on scaled/filtered data (T023, T030-T031)
+   const xScale = useMemo(() => {
+      if (scaledData.length === 0) return d3.scaleLinear().domain([0, 1]).range([0, innerWidth]);
+
+      const scaleFactor = axisConfig.unitScale / 1000;
+      const xExtent = d3.extent(scaledData, d => d[axisConfig.xProperty] * scaleFactor) as [number, number];
+
       return d3.scaleLinear()
-         .domain(scaledDomain)
+         .domain(xExtent)
          .range([0, innerWidth])
          .nice();
-   }, [validData, axisConfig.xProperty, axisConfig.unitScale, innerWidth]);
+   }, [scaledData, axisConfig.xProperty, axisConfig.unitScale, innerWidth]);
 
    const yScale = useMemo(() => {
-      if (validData.length === 0) return d3.scaleLinear().domain([0, 1]).range([innerHeight, 0]);
+      if (scaledData.length === 0) return d3.scaleLinear().domain([0, 1]).range([innerHeight, 0]);
 
-      const yExtent = d3.extent(validData, d => d[axisConfig.yProperty]) as [number, number];
-      // Apply unit scale factor (T031)
       const scaleFactor = axisConfig.unitScale / 1000;
-      const scaledDomain: [number, number] = [
-         yExtent[0] * scaleFactor,
-         yExtent[1] * scaleFactor
-      ];
+      const yExtent = d3.extent(scaledData, d => d[axisConfig.yProperty] * scaleFactor) as [number, number];
+
       return d3.scaleLinear()
-         .domain(scaledDomain)
+         .domain(yExtent)
          .range([innerHeight, 0])
          .nice();
-   }, [validData, axisConfig.yProperty, axisConfig.unitScale, innerHeight]);
+   }, [scaledData, axisConfig.yProperty, axisConfig.unitScale, innerHeight]);
+
+   // Build spatial index (T021) - rebuild when axis properties or scale change
+   const getBounds = useCallback((point: CellData) => {
+      const scaleFactor = axisConfig.unitScale / 1000;
+      return {
+         x: point[axisConfig.xProperty] * scaleFactor,
+         y: point[axisConfig.yProperty] * scaleFactor
+      };
+   }, [axisConfig.xProperty, axisConfig.yProperty, axisConfig.unitScale]);
+   const spatialIndexHook = useSpatialIndex(scaledData, getBounds);
+
+   useEffect(() => {
+      if (spatialIndexHook && spatialIndexHook !== spatialIndex) {
+         dispatch({ type: 'REBUILD_SPATIAL_INDEX', index: spatialIndexHook });
+      }
+   }, [spatialIndexHook, spatialIndex, dispatch]);
 
    // Create coordinate transform (T071-T072) using scaled domains from xScale/yScale
    const dataDomain = useMemo(() => ({
@@ -221,17 +230,17 @@ export default function Chart({
       }
    }, [transform, coordinateTransform, dispatch]);
 
-   // Get visible points via viewport culling (T077) - reuse getBounds
+   // Get visible points via viewport culling (T077) - use scaledData instead of data
    const visiblePoints = useViewportCulling(
-      data,
+      scaledData,
       viewport,
       spatialIndex,
       getBounds
    );
 
-   // Calculate polygon selection (T022 - with dynamic axis properties)
+   // Calculate polygon selection (T022 - with dynamic axis properties) - use scaledData
    const selectionMap = usePolygonSelection(
-      data,
+      scaledData,
       polygons.map(p => ({ id: p.id, points: p.points, isVisible: p.isVisible })),
       transform,
       axisConfig.xProperty,
@@ -242,7 +251,7 @@ export default function Chart({
    useEffect(() => {
       if (!dataLayerRef.current || !transform) return;
 
-      if (data.length === 0) return;
+      if (scaledData.length === 0) return;
 
       const ctx = dataLayerRef.current.getContext('2d');
       if (!ctx) return;
@@ -274,7 +283,7 @@ export default function Chart({
          ctx.fillStyle = COLORS.POINT_UNSELECTED;
          ctx.globalAlpha = COLORS.POINT_UNSELECTED_ALPHA;
          ctx.beginPath();
-         data.forEach((point, dataIndex) => {
+         scaledData.forEach((point, dataIndex) => {
             if (!pointToPolygons.has(dataIndex)) {
                // Use dynamic axis properties with unit scale applied (T023, T031)
                const screenPos = transform.toScreen({
@@ -302,7 +311,7 @@ export default function Chart({
             ctx.globalAlpha = COLORS.POINT_SELECTED_ALPHA;
             ctx.beginPath();
             indices.forEach(dataIndex => {
-               const point = data[dataIndex];
+               const point = scaledData[dataIndex];
                // Use dynamic axis properties with unit scale applied (T023, T031)
                const screenPos = transform.toScreen({
                   x: (point[axisConfig.xProperty] * scaleFactor) as DataX,
@@ -334,7 +343,7 @@ export default function Chart({
             // Use Set to avoid duplicate points
             const uniqueIndices = [...new Set(indices)];
             uniqueIndices.forEach(dataIndex => {
-               const point = data[dataIndex];
+               const point = scaledData[dataIndex];
                // Use dynamic axis properties with unit scale applied (T023, T031)
                const screenPos = transform.toScreen({
                   x: (point[axisConfig.xProperty] * scaleFactor) as DataX,
@@ -348,9 +357,8 @@ export default function Chart({
 
          ctx.globalAlpha = 1.0; // Reset
       });
-
       return () => cancelAnimationFrame(frameId);
-   }, [data, polygons, transform, innerWidth, innerHeight, selectionMap, axisConfig.xProperty, axisConfig.yProperty, axisConfig.unitScale]);
+   }, [scaledData, polygons, transform, innerWidth, innerHeight, selectionMap, axisConfig.xProperty, axisConfig.yProperty, axisConfig.unitScale]);
 
    // Render polygons (T102-T109)
    useEffect(() => {
