@@ -130,6 +130,8 @@ export default function Sidebar() {
             color: 'white',
             overflowY: 'auto',
             boxSizing: 'border-box',
+            display: 'flex',
+            flexDirection: 'column',
          }}
       >
          {/* Axis Selection Controls */}
@@ -146,6 +148,7 @@ export default function Sidebar() {
          </ListItem>
 
          {/* Polygon List */}
+         <div style={{ maxHeight: '300px', overflowY: 'auto', flex: '0 1 auto' }}>
          {polygons.map((polygon) => {
             const labelId = `checkbox-list-label-${polygon.id}`;
 
@@ -206,6 +209,7 @@ export default function Sidebar() {
                </ListItem>
             );
          })}
+         </div>
 
          {/* /Selection Summary/ */}
          {selectedPolygonId.length > 0 && (

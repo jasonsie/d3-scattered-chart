@@ -18,3 +18,34 @@ text {
 p {
    color: grey !important;
 }
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+   width: 12px;
+   height: 12px;
+}
+
+::-webkit-scrollbar-track {
+   background: #1a1a1a;
+   border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+   background: #4a4a4a;
+   border-radius: 10px;
+   border: 2px solid #1a1a1a;
+}
+
+::-webkit-scrollbar-thumb:hover {
+   background: #5a5a5a;
+}
+
+::-webkit-scrollbar-thumb:active {
+   background: #6a6a6a;
+}
+
+/* Firefox scrollbar */
+* {
+   scrollbar-width: thin;
+   scrollbar-color: #4a4a4a #1a1a1a;
+}
