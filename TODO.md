@@ -52,7 +52,6 @@
        - modualize the loading component for the whole app 
        - state management: adding a loading state to a new and the most outer context provider 'GlobalContext'
        - component refer to 'plant circles' in this example: 'https://codepen.io/esdesignstudio/pen/RwQdEZb' 
-
 ## Modify
 1. Data (state)
    - Measurement unit state
@@ -68,4 +67,7 @@
 
 
 ## Refactor: Sidebar Table
-
+1. Loading
+   - when rendering the chart is not ready, set global loading state to true; when chart is ready, set global loading state to false
+2. Chart View
+   -   set the min-width and min-height for the chart view area, so that the chart area size doesn't change  even thought the chart is loading or not

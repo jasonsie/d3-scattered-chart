@@ -7,7 +7,7 @@
  * Wrapped around entire app in layout.tsx.
  */
 
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 import type { GlobalState } from '@/types/state';
 
 /**
@@ -41,9 +41,9 @@ export function GlobalProvider({ children }: { children: ReactNode }) {
    *
    * @param update - Partial state object to merge
    */
-  const updateGlobal = (update: Partial<GlobalState>) => {
+  const updateGlobal = useCallback((update: Partial<GlobalState>) => {
     setState(prev => ({ ...prev, ...update }));
-  };
+  }, []);
 
   return (
     <GlobalContext.Provider value={state}>

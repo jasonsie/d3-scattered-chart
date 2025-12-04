@@ -23,8 +23,12 @@
 /* Canvas-based Chart component styles */
 .chartContainer {
   position: relative;
-  width: fit-content;
-  height: fit-content;
+  width: 800px;
+  height: 600px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 .dataLayer {

@@ -5,6 +5,7 @@ import * as d3 from 'd3';
 import styles from '@/styles/Chart.module.css';
 import Polygon from './Polygon';
 import { useChartDispatch, useChartState } from '@/contexts/ChartContext';
+import { useGlobalDispatch } from '@/contexts/GlobalContext';
 import { CellData } from '@/utils/data/loadCsvData';
 import { isValidDataPoint } from '@/utils/data/validateData';
 import { useCanvasRenderer } from '@/hooks/useCanvasRenderer';
@@ -76,6 +77,7 @@ export default function Chart({
    // Chart state from context
    const { data, loading, polygons, viewport, spatialIndex, coordinateTransform, axisConfig, isRendering } = useChartState();
    const dispatch = useChartDispatch();
+   const globalDispatch = useGlobalDispatch();
 
    // Mounted state for client-side rendering
    const [isMounted, setIsMounted] = useState(false);
@@ -89,6 +91,11 @@ export default function Chart({
    useEffect(() => {
       setIsMounted(true);
    }, []);
+
+   // Sync loading state with GlobalContext
+   useEffect(() => {
+      globalDispatch({ isLoading: loading, loadingMessage: loading ? '' : undefined });
+   }, [loading, globalDispatch]);
 
    // Measure actual container size on mount
    useEffect(() => {
@@ -398,7 +405,7 @@ export default function Chart({
    if (!isMounted) return null;
 
    return (
-      <div ref={containerRef} className={styles.chartContainer} style={{ minWidth: width, minHeight: height }}>
+      <div ref={containerRef} className={styles.chartContainer}>
          {loading ? (
             <div>Loading...</div>
          ) : (
