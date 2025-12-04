@@ -20,7 +20,9 @@
       "Bash(.specify/scripts/bash/setup-plan.sh:*)",
       "Bash(.specify/scripts/bash/update-agent-context.sh:*)",
       "Bash(if [ -d \"/Users/jason/Developer/y-pj/d3-scattered-chart/specs/001-responsive-layout/checklists\" ])",
-      "Bash(yarn add:*)"
+      "Bash(yarn add:*)",
+      "mcp__context7__resolve-library-id",
+      "WebSearch"
     ],
     "deny": [],
     "ask": []
