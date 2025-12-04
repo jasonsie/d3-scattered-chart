@@ -7,4 +7,6 @@
   padding: 16px;
   overflow-y: auto;
   height: 100%;
+  background-color: black;
+  opacity: 0.9;
 }
