@@ -207,6 +207,7 @@ export default function Sidebar() {
             );
          })}
 
+         {/* /Selection Summary/ */}
          {selectedPolygonId.length > 0 && (
             <ListItem
                sx={{

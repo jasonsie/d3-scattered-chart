@@ -47,7 +47,6 @@ function AxisSelector({ axis, label, className }: AxisSelectorProps) {
 
    // Labels
    const helperText = label || (axis === 'x' ? 'X-Axis' : 'Y-Axis');
-   const fieldLabel = axis === 'x' ? 'x-axis' : 'y-axis';
 
    // Filter options: exclude opposite axis selection
    const availableOptions = DATA_PROPERTY_NAMES.filter(prop => prop !== oppositeProperty);
@@ -186,7 +185,6 @@ function AxisSelector({ axis, label, className }: AxisSelectorProps) {
                   </MenuItem>
                ))}
             </Select>
-            <FormHelperText>{fieldLabel}</FormHelperText>
          </FormControl>
 
          {/* Polygon retention confirmation dialog */}
