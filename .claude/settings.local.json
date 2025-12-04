@@ -18,7 +18,9 @@
       "Bash(.specify/scripts/bash/create-new-feature.sh:*)",
       "SlashCommand(/speckit.plan)",
       "Bash(.specify/scripts/bash/setup-plan.sh:*)",
-      "Bash(.specify/scripts/bash/update-agent-context.sh:*)"
+      "Bash(.specify/scripts/bash/update-agent-context.sh:*)",
+      "Bash(if [ -d \"/Users/jason/Developer/y-pj/d3-scattered-chart/specs/001-responsive-layout/checklists\" ])",
+      "Bash(yarn add:*)"
     ],
     "deny": [],
     "ask": []

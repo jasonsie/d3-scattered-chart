@@ -74,7 +74,7 @@ export default function Chart({
    const containerRef = useRef<HTMLDivElement>(null);
 
    // Chart state from context
-   const { data, loading, polygons, viewport, spatialIndex, coordinateTransform, axisConfig, isRendering } = useChartState();
+   const { data, loading, polygons, viewport, spatialIndex, coordinateTransform, axisConfig, isRendering, viewportWidth, viewportHeight } = useChartState();
    const dispatch = useChartDispatch();
    const globalDispatch = useGlobalDispatch();
 

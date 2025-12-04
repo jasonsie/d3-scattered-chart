@@ -1,0 +1,10 @@
+/**
+ * Mobile drawer styles
+ * Feature: 001-responsive-layout
+ */
+
+.drawerContent {
+  padding: 16px;
+  overflow-y: auto;
+  height: 100%;
+}

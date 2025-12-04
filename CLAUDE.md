@@ -237,9 +237,91 @@ Uses CSS Modules for component-specific styles. Key style files:
 - `src/styles/Chart.module.css`: Chart-specific styles
 - `src/styles/globals.css`: Global styles and resets
 
+## Responsive Layout Architecture (Feature: 001-responsive-layout)
+
+### Viewport Detection and Breakpoints
+
+The application implements a responsive layout with mobile and desktop modes:
+
+- **Breakpoint**: 768px (defined in `src/constants/layout.ts`)
+- **Mobile mode**: viewport width < 768px
+- **Desktop mode**: viewport width ≥ 768px
+
+**Viewport Hook** (`src/hooks/useViewport.ts`):
+- Detects viewport size using `window.innerWidth`
+- Implements 150ms debouncing to prevent excessive re-renders during window resizing
+- Syncs viewport state to ChartContext via `SET_VIEWPORT_MODE` action
+- Returns: `{ viewportMode, viewportWidth, viewportHeight, isMobile, isDesktop }`
+
+### State Management for Responsive Behavior
+
+ChartContext extensions (`src/contexts/ChartContext.tsx`):
+- `isDrawerOpen: boolean` - Mobile drawer open/close state
+- `viewportMode: 'mobile' | 'desktop'` - Current responsive mode
+- `viewportWidth: number` - Current window width
+- `viewportHeight: number` - Current window height
+
+**Actions**:
+- `TOGGLE_DRAWER` - Toggle drawer open/close
+- `SET_DRAWER_OPEN` - Explicitly set drawer state
+- `SET_VIEWPORT_MODE` - Update viewport mode (auto-closes drawer on mobile→desktop transition)
+- `SET_VIEWPORT_DIMENSIONS` - Update dimensions only
+
+### Desktop Layout (≥768px)
+
+- Sidebar visible on right side (300px fixed width)
+- Chart fills remaining horizontal space
+- No mobile drawer or FAB visible
+- Traditional two-column layout maintained
+
+### Mobile Layout (<768px)
+
+- Sidebar hidden from main layout
+- Chart fills full viewport width (≥90% per SC-001)
+- Floating Action Button (FAB) at bottom-right (16px from edges)
+- Bottom sheet drawer slides up from bottom covering 65vh
+- Drawer contains full sidebar functionality
+
+**Components**:
+- `ViewportHandler` (`src/components/ViewportHandler.tsx`) - Manages viewport detection and conditional rendering
+- `MobileDrawer` (`src/components/MobileDrawer.tsx`) - MUI Drawer wrapper for mobile
+- `DrawerToggleFab` (`src/components/DrawerToggleFab.tsx`) - FAB toggle button
+
+### Chart Responsiveness
+
+The Chart component automatically adapts to dimension changes:
+
+1. **ResizeObserver** monitors container size changes (existing implementation)
+2. D3 scales (xScale, yScale) recalculate based on new innerWidth/innerHeight
+3. Coordinate transforms update automatically via `useCoordinateTransform` hook
+4. Canvas layers re-render with new dimensions
+5. **Zero pixel drift** guaranteed: polygons stored in data space, transforms are pure functions
+
+**Performance**:
+- Chart resize completes within 500ms (SC-003)
+- Drawer animations run at 60 FPS (SC-004)
+- Resize events debounced at 150ms to prevent excessive re-renders
+
+### Integration Pattern
+
+```tsx
+// page.tsx
+<ChartProvider>
+  <ViewportHandler>
+    {/* Desktop: sidebar visible, drawer/FAB hidden */}
+    {/* Mobile: sidebar hidden, drawer/FAB visible */}
+    <div className={styles.chartContainer}>
+      <Chart />
+      <Sidebar />
+    </div>
+  </ViewportHandler>
+</ChartProvider>
+```
+
 ## Active Technologies
 - TypeScript 5.9.3 (strict mode enabled) (001-responsive-layout)
 - N/A (client-side state only via React Context) (001-responsive-layout)
+- Material-UI v7.3.5 (Drawer, Fab, icons for mobile UI) (001-responsive-layout)
 
 ## Recent Changes
-- 001-responsive-layout: Added TypeScript 5.9.3 (strict mode enabled)
+- 001-responsive-layout: Implemented responsive layout with mobile drawer functionality

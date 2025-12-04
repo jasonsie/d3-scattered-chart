@@ -143,7 +143,7 @@
 
 **Purpose**: Improvements that affect multiple user stories and final validation
 
-- [ ] T040 [P] Update CLAUDE.md documentation to reflect responsive layout architecture (viewport hook, drawer state management, canvas resize strategy)
+- [X] T040 [P] Update CLAUDE.md documentation to reflect responsive layout architecture (viewport hook, drawer state management, canvas resize strategy)
 - [ ] T041 [P] Remove any console.log debugging statements added during implementation from all modified files
 - [ ] T042 Performance validation: Test chart resize completes within 500ms across all user stories (SC-003)
 - [ ] T043 Performance validation: Verify drawer animations run at 60 FPS using Chrome DevTools Performance tab (SC-004)

@@ -36,6 +36,11 @@ interface ChartState {
    // Axis configuration state
    axisConfig: AxisConfiguration;
    isRendering: boolean;
+   // Responsive layout state (Feature: 001-responsive-layout)
+   isDrawerOpen: boolean;
+   viewportMode: 'mobile' | 'desktop';
+   viewportWidth: number;
+   viewportHeight: number;
 }
 
 
@@ -69,7 +74,12 @@ type ChartAction =
    // Axis configuration actions
    | { type: 'SET_AXIS_CONFIG'; config: Partial<AxisConfiguration> }
    | { type: 'SET_RENDERING'; isRendering: boolean }
-   | { type: 'RESET_VIEWPORT' };
+   | { type: 'RESET_VIEWPORT' }
+   // Responsive layout actions (Feature: 001-responsive-layout)
+   | { type: 'TOGGLE_DRAWER' }
+   | { type: 'SET_DRAWER_OPEN'; payload: boolean }
+   | { type: 'SET_VIEWPORT_MODE'; payload: { mode: 'mobile' | 'desktop'; width: number; height?: number } }
+   | { type: 'SET_VIEWPORT_DIMENSIONS'; payload: { width: number; height: number } };
 
 /**
  * Initial state
@@ -101,6 +111,11 @@ const initialState: ChartState = {
    // Axis configuration initial state
    axisConfig: DEFAULT_AXIS_CONFIG,
    isRendering: false,
+   // Responsive layout initial state (Feature: 001-responsive-layout)
+   isDrawerOpen: false,
+   viewportMode: 'desktop', // SSR-safe default
+   viewportWidth: 0,
+   viewportHeight: 0,
 };
 
 // Context creation
@@ -232,6 +247,35 @@ function chartReducer(state: ChartState, action: ChartAction): ChartState {
                scale: 1,
             } : null,
          };
+      // Responsive layout action handlers (Feature: 001-responsive-layout)
+      case 'TOGGLE_DRAWER':
+         return {
+            ...state,
+            isDrawerOpen: !state.isDrawerOpen,
+         };
+      case 'SET_DRAWER_OPEN':
+         return {
+            ...state,
+            isDrawerOpen: action.payload,
+         };
+      case 'SET_VIEWPORT_MODE': {
+         const { mode, width, height } = action.payload;
+         // Auto-close drawer when transitioning from mobile to desktop
+         const shouldCloseDrawer = mode === 'desktop' && state.viewportMode === 'mobile' && state.isDrawerOpen;
+         return {
+            ...state,
+            viewportMode: mode,
+            viewportWidth: width,
+            viewportHeight: height ?? state.viewportHeight,
+            isDrawerOpen: shouldCloseDrawer ? false : state.isDrawerOpen,
+         };
+      }
+      case 'SET_VIEWPORT_DIMENSIONS':
+         return {
+            ...state,
+            viewportWidth: action.payload.width,
+            viewportHeight: action.payload.height,
+         };
       default:
          return state;
    }
@@ -267,6 +311,11 @@ export function ChartProvider({ children }: { children: ReactNode }) {
 
 // Custom hooks
 export function useChartState() {
+   return useContext(ChartContext);
+}
+
+// Alias for consistency
+export function useChart() {
    return useContext(ChartContext);
 }
 

@@ -27,6 +27,32 @@
    justify-content: center;
    align-items: flex-start;
    gap: 20px;
+   width: 100%;
+   max-width: 1400px;
+}
+
+/* Responsive: Mobile layout (<768px) */
+@media (max-width: 767px) {
+   .page {
+      padding: 10px;
+   }
+
+   .chartContainer {
+      flex-direction: column;
+      gap: 0;
+      padding: 0;
+   }
+
+   .chartBackground {
+      width: 100%;
+      height: calc(100vh - 100px);
+      max-height: 600px;
+   }
+
+   /* Hide sidebar on mobile (renders in drawer instead) */
+   .chartContainer > :last-child {
+      display: none;
+   }
 }
 
 .chartContainerLeft {
