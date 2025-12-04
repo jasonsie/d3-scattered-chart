@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(.specify/scripts/bash/check-prerequisites.sh:*)",
+      "Bash(if [ -d \"/Users/jason/Developer/y-pj/d3-scattered-chart/specs/005-dynamic-axis/checklists\" ])",
+      "Bash(then echo \"EXISTS\")",
+      "Bash(else echo \"NONE\")",
+      "Bash(fi)",
+      "Bash(git rev-parse:*)",
+      "mcp__ide__getDiagnostics",
+      "Bash(yarn build:*)",
+      "Bash(timeout 10 yarn dev:*)",
+      "Bash(gtimeout 10 yarn dev:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

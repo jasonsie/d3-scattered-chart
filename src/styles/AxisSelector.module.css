@@ -1,0 +1,20 @@
+/**
+ * AxisSelector Component Styles
+ *
+ * Dropdown styling and dialog presentation for axis selection
+ */
+
+/* Dropdown spacing */
+.dropdown {
+   margin-bottom: 16px;
+}
+
+/* Dialog presentation */
+.dialog {
+   z-index: 10000; /* Above loading overlay (9999) */
+}
+
+/* Optional: Style for dropdown label */
+.label {
+   font-weight: 500;
+}

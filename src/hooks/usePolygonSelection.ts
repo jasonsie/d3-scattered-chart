@@ -1,6 +1,6 @@
 /**
  * Custom hook for polygon-based point selection
- * 
+ *
  * Calculates which data points fall within polygon boundaries
  * using point-in-polygon testing with coordinate transformation
  */
@@ -9,6 +9,8 @@ import { useMemo } from 'react';
 import * as d3 from 'd3';
 import type { CoordinateTransform } from '@/types/canvas';
 import type { DataX, DataY } from '@/types/canvas';
+import type { DataPropertyName } from '@/types/state';
+import { isValidDataPoint } from '@/utils/data/validateData';
 
 export interface PolygonData {
   id: string;
@@ -21,17 +23,21 @@ export interface SelectionMap {
 }
 
 /**
- * Hook for calculating polygon selection
- * 
+ * Hook for calculating polygon selection (T022)
+ *
  * @param data - Full dataset
  * @param polygons - Array of polygons with screen coordinates
  * @param coordinateTransform - Transform for converting data to screen coords
+ * @param xProperty - X-axis property name (for dynamic axis support)
+ * @param yProperty - Y-axis property name (for dynamic axis support)
  * @returns Selection map with polygon ID -> point indices mapping
  */
-export function usePolygonSelection<T extends { x: number; y: number }>(
+export function usePolygonSelection<T extends Record<string, number>>(
   data: T[],
   polygons: PolygonData[],
-  coordinateTransform: CoordinateTransform | null
+  coordinateTransform: CoordinateTransform | null,
+  xProperty: DataPropertyName,
+  yProperty: DataPropertyName
 ): SelectionMap {
   return useMemo(() => {
     // Early return if no transform or no data
@@ -53,12 +59,17 @@ export function usePolygonSelection<T extends { x: number; y: number }>(
       // Convert polygon points to array format for D3
       const polygonPath = polygon.points.map(p => [p.x, p.y] as [number, number]);
 
-      // Test each data point
+      // Test each data point (T022 - filter invalid points, use dynamic properties)
       data.forEach((point, index) => {
-        // Convert data point to screen coordinates
+        // Skip invalid points
+        if (!isValidDataPoint(point as any, xProperty, yProperty)) {
+          return;
+        }
+
+        // Convert data point to screen coordinates using dynamic axis properties
         const screenPos = coordinateTransform.toScreen({
-          x: point.x as DataX,
-          y: point.y as DataY
+          x: point[xProperty] as DataX,
+          y: point[yProperty] as DataY
         });
 
         // Test if point is inside polygon
@@ -71,5 +82,5 @@ export function usePolygonSelection<T extends { x: number; y: number }>(
     });
 
     return selectionMap;
-  }, [data, polygons, coordinateTransform]);
+  }, [data, polygons, coordinateTransform, xProperty, yProperty]);
 }

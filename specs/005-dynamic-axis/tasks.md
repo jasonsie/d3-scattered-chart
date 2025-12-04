@@ -24,9 +24,9 @@ description: "Task breakdown for Dynamic Axis Selection feature implementation"
 
 **Purpose**: Add axis configuration constants and type definitions
 
-- [ ] T001 [P] Create axis constants file in src/utils/constants/axis.ts with DATA_PROPERTY_NAMES array, DEFAULT_AXIS_CONFIG constant, and parsePropertyLabel utility function
-- [ ] T002 [P] Extend state type definitions in src/types/state.d.ts with AxisConfiguration, DataPropertyName, DataPropertyMetadata interfaces
-- [ ] T003 [P] Add component type definitions in src/types/components.d.ts with AxisSelectorProps, UnitScaleControlProps, LoadingProps interfaces
+- [X] T001 [P] Create axis constants file in src/utils/constants/axis.ts with DATA_PROPERTY_NAMES array, DEFAULT_AXIS_CONFIG constant, and parsePropertyLabel utility function
+- [X] T002 [P] Extend state type definitions in src/types/state.d.ts with AxisConfiguration, DataPropertyName, DataPropertyMetadata interfaces
+- [X] T003 [P] Add component type definitions in src/types/components.d.ts with AxisSelectorProps, UnitScaleControlProps, LoadingProps interfaces
 
 ---
 
@@ -36,12 +36,12 @@ description: "Task breakdown for Dynamic Axis Selection feature implementation"
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T004 Extend ChartContext state in src/contexts/ChartContext.tsx with axisConfig field (default DEFAULT_AXIS_CONFIG) and isRendering field (default false)
-- [ ] T005 Add ChartContext actions in src/contexts/ChartContext.tsx for SET_AXIS_CONFIG, SET_RENDERING, and RESET_VIEWPORT
-- [ ] T006 Implement reducer cases in src/contexts/ChartContext.tsx for SET_AXIS_CONFIG (merges partial config, sets scales to null), SET_RENDERING (updates flag), and RESET_VIEWPORT (resets zoom/pan)
-- [ ] T007 [P] Create GlobalContext in src/contexts/GlobalContext.tsx with GlobalState interface (isLoading, loadingMessage), GlobalProvider component, useGlobalState and useGlobalDispatch hooks
-- [ ] T008 [P] Create data validation utility in src/utils/data/validateData.ts with isValidDataPoint function that checks for null, NaN, and Infinity values
-- [ ] T009 Update app layout in src/app/layout.tsx to wrap entire app with GlobalProvider (outermost) then ChartProvider, and add AppContent component that conditionally renders Loading component based on useGlobalState
+- [X] T004 Extend ChartContext state in src/contexts/ChartContext.tsx with axisConfig field (default DEFAULT_AXIS_CONFIG) and isRendering field (default false)
+- [X] T005 Add ChartContext actions in src/contexts/ChartContext.tsx for SET_AXIS_CONFIG, SET_RENDERING, and RESET_VIEWPORT
+- [X] T006 Implement reducer cases in src/contexts/ChartContext.tsx for SET_AXIS_CONFIG (merges partial config, sets scales to null), SET_RENDERING (updates flag), and RESET_VIEWPORT (resets zoom/pan)
+- [X] T007 [P] Create GlobalContext in src/contexts/GlobalContext.tsx with GlobalState interface (isLoading, loadingMessage), GlobalProvider component, useGlobalState and useGlobalDispatch hooks
+- [X] T008 [P] Create data validation utility in src/utils/data/validateData.ts with isValidDataPoint function that checks for null, NaN, and Infinity values
+- [X] T009 Update app layout in src/app/layout.tsx to wrap entire app with GlobalProvider (outermost) then ChartProvider, and add AppContent component that conditionally renders Loading component based on useGlobalState
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
@@ -55,20 +55,20 @@ description: "Task breakdown for Dynamic Axis Selection feature implementation"
 
 ### Implementation for User Story 1
 
-- [ ] T010 [P] [US1] Create AxisSelector component in src/components/AxisSelector.tsx with Material-UI Select dropdown, helper text ("X-Axis" or "Y-Axis"), field label ("x-axis || y-axis"), and option filtering to exclude opposite axis property
-- [ ] T011 [P] [US1] Add confirmation dialog to AxisSelector component in src/components/AxisSelector.tsx using Material-UI Dialog with title "Keep existing polygons?", message text, and "Keep" / "Remove" buttons
-- [ ] T012 [P] [US1] Create AxisSelector CSS module in src/styles/AxisSelector.module.css with styling for dropdown spacing and dialog presentation
-- [ ] T013 [US1] Implement AxisSelector change handler in src/components/AxisSelector.tsx that checks for existing polygons, shows confirmation dialog if needed, parses property label to extract marker and unit, and dispatches SET_AXIS_CONFIG action
-- [ ] T014 [US1] Add AxisSelector components to Sidebar in src/components/Sidebar.tsx (one for x-axis, one for y-axis) above existing polygon controls
-- [ ] T015 [US1] Update Sidebar CSS module in src/styles/Sidebar.module.css to add spacing between axis selectors and polygon list
-- [ ] T016 [US1] Update Chart component in src/components/Chart.tsx to filter valid data points using isValidDataPoint utility before scale creation
-- [ ] T017 [US1] Update Chart component scale creation useEffect in src/components/Chart.tsx to use axisConfig.xProperty and axisConfig.yProperty instead of hardcoded 'x' and 'y' properties, rebuild scales when axis properties change, and dispatch RESET_VIEWPORT
-- [ ] T018 [US1] Add rendering state management in src/components/Chart.tsx to dispatch SET_RENDERING(true) at start of render and SET_RENDERING(false) on completion using requestAnimationFrame
-- [ ] T019 [US1] Update Chart component to use useGlobalDispatch in src/components/Chart.tsx to set global loading state (isLoading: true, loadingMessage: 'Rendering chart...') during axis changes
-- [ ] T020 [US1] Update useCoordinateTransform hook in src/hooks/useCoordinateTransform.ts to rebuild coordinate transforms when axisConfig changes (xProperty or yProperty)
-- [ ] T021 [US1] Update useSpatialIndex hook in src/hooks/useSpatialIndex.ts to rebuild spatial index when axisConfig changes (xProperty or yProperty)
-- [ ] T022 [US1] Update usePolygonSelection hook in src/hooks/usePolygonSelection.ts to recalculate polygon statistics using new axis properties after axis change, filtering points by isValidDataPoint
-- [ ] T023 [US1] Update canvasRenderer utility in src/utils/canvas/canvasRenderer.ts to use dynamic axis properties from axisConfig instead of hardcoded data.x and data.y
+- [X] T010 [P] [US1] Create AxisSelector component in src/components/AxisSelector.tsx with Material-UI Select dropdown, helper text ("X-Axis" or "Y-Axis"), field label ("x-axis || y-axis"), and option filtering to exclude opposite axis property
+- [X] T011 [P] [US1] Add confirmation dialog to AxisSelector component in src/components/AxisSelector.tsx using Material-UI Dialog with title "Keep existing polygons?", message text, and "Keep" / "Remove" buttons
+- [X] T012 [P] [US1] Create AxisSelector CSS module in src/styles/AxisSelector.module.css with styling for dropdown spacing and dialog presentation
+- [X] T013 [US1] Implement AxisSelector change handler in src/components/AxisSelector.tsx that checks for existing polygons, shows confirmation dialog if needed, parses property label to extract marker and unit, and dispatches SET_AXIS_CONFIG action
+- [X] T014 [US1] Add AxisSelector components to Sidebar in src/components/Sidebar.tsx (one for x-axis, one for y-axis) above existing polygon controls
+- [X] T015 [US1] Update Sidebar CSS module in src/styles/Sidebar.module.css to add spacing between axis selectors and polygon list
+- [X] T016 [US1] Update Chart component in src/components/Chart.tsx to filter valid data points using isValidDataPoint utility before scale creation
+- [X] T017 [US1] Update Chart component scale creation useEffect in src/components/Chart.tsx to use axisConfig.xProperty and axisConfig.yProperty instead of hardcoded 'x' and 'y' properties, rebuild scales when axis properties change, and dispatch RESET_VIEWPORT
+- [X] T018 [US1] Add rendering state management in src/components/Chart.tsx to dispatch SET_RENDERING(true) at start of render and SET_RENDERING(false) on completion using requestAnimationFrame
+- [X] T019 [US1] Update Chart component to use useGlobalDispatch in src/components/Chart.tsx to set global loading state (isLoading: true, loadingMessage: 'Rendering chart...') during axis changes
+- [X] T020 [US1] Update useCoordinateTransform hook in src/hooks/useCoordinateTransform.ts to rebuild coordinate transforms when axisConfig changes (xProperty or yProperty)
+- [X] T021 [US1] Update useSpatialIndex hook in src/hooks/useSpatialIndex.ts to rebuild spatial index when axisConfig changes (xProperty or yProperty)
+- [X] T022 [US1] Update usePolygonSelection hook in src/hooks/usePolygonSelection.ts to recalculate polygon statistics using new axis properties after axis change, filtering points by isValidDataPoint
+- [X] T023 [US1] Update canvasRenderer utility in src/utils/canvas/canvasRenderer.ts to use dynamic axis properties from axisConfig instead of hardcoded data.x and data.y
 
 **Checkpoint**: At this point, User Story 1 should be fully functional - users can select different axes, chart re-renders correctly, polygons have confirmation dialog, and dropdown options exclude opposite axis selection
 
@@ -82,9 +82,9 @@ description: "Task breakdown for Dynamic Axis Selection feature implementation"
 
 ### Implementation for User Story 2
 
-- [ ] T024 [US2] Update Chart component axis label rendering in src/components/Chart.tsx to use axisConfig.xLabel and axisConfig.xUnit for x-axis label, formatted as "[label] ([unit])" or "[label]" if unit is empty string
-- [ ] T025 [US2] Update Chart component axis label rendering in src/components/Chart.tsx to use axisConfig.yLabel and axisConfig.yUnit for y-axis label, formatted as "[label] ([unit])" or "[label]" if unit is empty string
-- [ ] T026 [US2] Add useEffect in src/components/Chart.tsx to update D3 axis label selections when axisConfig changes (specifically xLabel, yLabel, xUnit, yUnit fields)
+- [X] T024 [US2] Update Chart component axis label rendering in src/components/Chart.tsx to use axisConfig.xLabel and axisConfig.xUnit for x-axis label, formatted as "[label] ([unit])" or "[label]" if unit is empty string
+- [X] T025 [US2] Update Chart component axis label rendering in src/components/Chart.tsx to use axisConfig.yLabel and axisConfig.yUnit for y-axis label, formatted as "[label] ([unit])" or "[label]" if unit is empty string
+- [X] T026 [US2] Add useEffect in src/components/Chart.tsx to update D3 axis label selections when axisConfig changes (specifically xLabel, yLabel, xUnit, yUnit fields)
 
 **Checkpoint**: At this point, User Stories 1 AND 2 should both work independently - axis selection updates labels automatically with correct formatting
 
@@ -98,12 +98,12 @@ description: "Task breakdown for Dynamic Axis Selection feature implementation"
 
 ### Implementation for User Story 3
 
-- [ ] T027 [P] [US3] Create UnitScaleControl component in src/components/UnitScaleControl.tsx using Material-UI Slider with range 100-2000, step 10, default value from axisConfig.unitScale, marks at 100/1000/2000, and disabled state tied to isRendering
-- [ ] T028 [P] [US3] Create UnitScaleControl CSS module in src/styles/UnitScaleControl.module.css with styling for slider component and spacing
-- [ ] T029 [US3] Implement UnitScaleControl handlers in src/components/UnitScaleControl.tsx with onChange for preview (optional) and onChangeCommitted to dispatch SET_AXIS_CONFIG with new unitScale value
-- [ ] T030 [US3] Add UnitScaleControl component to Sidebar in src/components/Sidebar.tsx below axis selectors and above polygon list
-- [ ] T031 [US3] Update Chart component scale creation in src/components/Chart.tsx to apply unitScale factor (unitScale / 1000) to scale domains before creating D3 scales
-- [ ] T032 [US3] Update Chart component scale creation useEffect dependencies in src/components/Chart.tsx to include axisConfig.unitScale so scales rebuild when unit scale changes
+- [X] T027 [P] [US3] Create UnitScaleControl component in src/components/UnitScaleControl.tsx using Material-UI Slider with range 100-2000, step 10, default value from axisConfig.unitScale, marks at 100/1000/2000, and disabled state tied to isRendering
+- [X] T028 [P] [US3] Create UnitScaleControl CSS module in src/styles/UnitScaleControl.module.css with styling for slider component and spacing
+- [X] T029 [US3] Implement UnitScaleControl handlers in src/components/UnitScaleControl.tsx with onChange for preview (optional) and onChangeCommitted to dispatch SET_AXIS_CONFIG with new unitScale value
+- [X] T030 [US3] Add UnitScaleControl component to Sidebar in src/components/Sidebar.tsx below axis selectors and above polygon list
+- [X] T031 [US3] Update Chart component scale creation in src/components/Chart.tsx to apply unitScale factor (unitScale / 1000) to scale domains before creating D3 scales
+- [X] T032 [US3] Update Chart component scale creation useEffect dependencies in src/components/Chart.tsx to include axisConfig.unitScale so scales rebuild when unit scale changes
 
 **Checkpoint**: All user stories should now be independently functional - full axis configuration with property selection, labeling, and unit scaling
 
@@ -113,15 +113,15 @@ description: "Task breakdown for Dynamic Axis Selection feature implementation"
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [ ] T033 [P] Create Loading component in src/components/Loading.tsx with plant circles animation (3 circles with staggered grow animation) and optional message prop
-- [ ] T034 [P] Create Loading CSS module in src/styles/Loading.module.css with overlay, plant circles animation keyframes, and message styling based on CodePen reference
-- [ ] T035 Add polygon loading indicators in src/components/Polygon.tsx to show loading state while statistics recalculate after axis change
-- [ ] T036 Update Polygon CSS module in src/styles/Polygon.module.css to add loading indicator styling (spinner or pulse animation)
-- [ ] T037 [P] Update loadCsvData utility in src/utils/data/loadCsvData.ts to return all CSV columns as typed properties (ensure all 15 data properties are accessible)
-- [ ] T038 [P] Add error handling in src/components/Chart.tsx for scale rebuild failures (catch errors from D3 extent calculation, log warnings, display user-friendly error message)
-- [ ] T039 Performance optimization: Add React.memo to AxisSelector in src/components/AxisSelector.tsx to prevent unnecessary re-renders
-- [ ] T040 Performance optimization: Add React.memo to UnitScaleControl in src/components/UnitScaleControl.tsx to prevent unnecessary re-renders
-- [ ] T041 Run quickstart.md validation by following Step 1-10 in /specs/005-dynamic-axis/quickstart.md to ensure all implementation matches documented workflow
+- [X] T033 [P] Create Loading component in src/components/Loading.tsx with plant circles animation (3 circles with staggered grow animation) and optional message prop
+- [X] T034 [P] Create Loading CSS module in src/styles/Loading.module.css with overlay, plant circles animation keyframes, and message styling based on CodePen reference
+- [X] T035 Add polygon loading indicators in src/components/Polygon.tsx to show loading state while statistics recalculate after axis change
+- [X] T036 Update Polygon CSS module in src/styles/Polygon.module.css to add loading indicator styling (spinner or pulse animation)
+- [X] T037 [P] Update loadCsvData utility in src/utils/data/loadCsvData.ts to return all CSV columns as typed properties (ensure all 15 data properties are accessible)
+- [X] T038 [P] Add error handling in src/components/Chart.tsx for scale rebuild failures (catch errors from D3 extent calculation, log warnings, display user-friendly error message)
+- [X] T039 Performance optimization: Add React.memo to AxisSelector in src/components/AxisSelector.tsx to prevent unnecessary re-renders
+- [X] T040 Performance optimization: Add React.memo to UnitScaleControl in src/components/UnitScaleControl.tsx to prevent unnecessary re-renders
+- [X] T041 Run quickstart.md validation by following Step 1-10 in /specs/005-dynamic-axis/quickstart.md to ensure all implementation matches documented workflow
 
 ---
 

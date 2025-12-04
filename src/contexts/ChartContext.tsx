@@ -3,6 +3,8 @@
 import { createContext, useContext, useReducer, ReactNode, useEffect } from 'react';
 import { CellData, loadCsvData } from '@/utils/data/loadCsvData';
 import type { Point, Polygon } from '@/types/components';
+import type { AxisConfiguration } from '@/types/state';
+import { DEFAULT_AXIS_CONFIG } from '@/utils/constants/axis';
 import * as d3 from 'd3';
 import type { Viewport, CanvasLayer, CoordinateTransform, SpatialIndex } from '@/types/canvas';
 
@@ -31,6 +33,9 @@ interface ChartState {
       polygonOverlay: CanvasLayer | null;
    };
    coordinateTransform: CoordinateTransform | null;
+   // Axis configuration state
+   axisConfig: AxisConfiguration;
+   isRendering: boolean;
 }
 
 
@@ -60,7 +65,11 @@ type ChartAction =
    | { type: 'REBUILD_SPATIAL_INDEX'; index: SpatialIndex }
    | { type: 'INVALIDATE_RECT'; rect: DOMRect; layer: 'dataPoints' | 'polygonOverlay' }
    | { type: 'PAN'; deltaX: number; deltaY: number }
-   | { type: 'ZOOM'; scale: number; centerX: number; centerY: number };
+   | { type: 'ZOOM'; scale: number; centerX: number; centerY: number }
+   // Axis configuration actions
+   | { type: 'SET_AXIS_CONFIG'; config: Partial<AxisConfiguration> }
+   | { type: 'SET_RENDERING'; isRendering: boolean }
+   | { type: 'RESET_VIEWPORT' };
 
 /**
  * Initial state
@@ -89,6 +98,9 @@ const initialState: ChartState = {
       polygonOverlay: null,
    },
    coordinateTransform: null,
+   // Axis configuration initial state
+   axisConfig: DEFAULT_AXIS_CONFIG,
+   isRendering: false,
 };
 
 // Context creation
@@ -196,6 +208,29 @@ function chartReducer(state: ChartState, action: ChartAction): ChartState {
                scale: action.scale,
                // Note: Zoom centering logic will be implemented in the component
             },
+         };
+      // Axis configuration action handlers
+      case 'SET_AXIS_CONFIG':
+         return {
+            ...state,
+            axisConfig: {
+               ...state.axisConfig,
+               ...action.config,
+            },
+            // Invalidate scales to trigger rebuild
+            scales: null,
+         };
+      case 'SET_RENDERING':
+         return { ...state, isRendering: action.isRendering };
+      case 'RESET_VIEWPORT':
+         return {
+            ...state,
+            viewport: state.viewport ? {
+               ...state.viewport,
+               translateX: 0,
+               translateY: 0,
+               scale: 1,
+            } : null,
          };
       default:
          return state;

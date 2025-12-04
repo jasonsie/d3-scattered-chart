@@ -15,6 +15,8 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
+import AxisSelector from './AxisSelector';
+import UnitScaleControl from './UnitScaleControl';
 
 /**
  * Sidebar component for displaying polygon list and statistics.
@@ -127,6 +129,20 @@ export default function Sidebar() {
             color: 'white',
          }}
       >
+         {/* Axis Selection Controls */}
+         <ListItem sx={{ paddingBottom: '8px' }}>
+            <AxisSelector axis="x" />
+         </ListItem>
+         <ListItem sx={{ paddingBottom: '8px' }}>
+            <AxisSelector axis="y" />
+         </ListItem>
+
+         {/* Unit Scale Control */}
+         <ListItem sx={{ paddingBottom: '16px' }}>
+            <UnitScaleControl />
+         </ListItem>
+
+         {/* Polygon List */}
          {polygons.map((polygon) => {
             const labelId = `checkbox-list-label-${polygon.id}`;
 

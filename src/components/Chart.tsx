@@ -6,6 +6,7 @@ import styles from '@/styles/Chart.module.css';
 import Polygon from './Polygon';
 import { useChartDispatch, useChartState } from '@/contexts/ChartContext';
 import { CellData } from '@/utils/data/loadCsvData';
+import { isValidDataPoint } from '@/utils/data/validateData';
 import { useCanvasRenderer } from '@/hooks/useCanvasRenderer';
 import { useCoordinateTransform } from '@/hooks/useCoordinateTransform';
 import { useSpatialIndex } from '@/hooks/useSpatialIndex';
@@ -73,7 +74,7 @@ export default function Chart({
    const containerRef = useRef<HTMLDivElement>(null);
 
    // Chart state from context
-   const { data, loading, polygons, viewport, spatialIndex, coordinateTransform } = useChartState();
+   const { data, loading, polygons, viewport, spatialIndex, coordinateTransform, axisConfig, isRendering } = useChartState();
    const dispatch = useChartDispatch();
 
    // Mounted state for client-side rendering
@@ -137,8 +138,11 @@ export default function Chart({
       });
    }, [innerWidth, innerHeight, dispatch]);
 
-   // Build spatial index (T073-T074) - stable callback
-   const getBounds = useCallback((point: CellData) => ({ x: point.x, y: point.y }), []);
+   // Build spatial index (T021) - rebuild when axis properties change
+   const getBounds = useCallback((point: CellData) => ({
+      x: point[axisConfig.xProperty],
+      y: point[axisConfig.yProperty]
+   }), [axisConfig.xProperty, axisConfig.yProperty]);
    const spatialIndexHook = useSpatialIndex(data, getBounds);
 
    useEffect(() => {
@@ -163,13 +167,52 @@ export default function Chart({
       dispatch({ type: 'SET_VIEWPORT', viewport: initialViewport });
    }, [viewport, dispatch]);
 
-   // Create coordinate transform (T071-T072) with stable references
-   const dataDomain = useMemo(() => ({ 
-      x: [...CHART_CONSTANTS.DATA_DOMAIN_X] as [number, number], 
-      y: [...CHART_CONSTANTS.DATA_DOMAIN_Y] as [number, number]
-   }), []);
+   // Filter valid data for scale calculations (T014-T015)
+   const validData = useMemo(() =>
+      data.filter(d => isValidDataPoint(d, axisConfig.xProperty, axisConfig.yProperty)),
+      [data, axisConfig.xProperty, axisConfig.yProperty]
+   );
+
+   // Create D3 scales with unit scaling applied (T023, T030-T031)
+   const xScale = useMemo(() => {
+      if (validData.length === 0) return d3.scaleLinear().domain([0, 1]).range([0, innerWidth]);
+
+      const xExtent = d3.extent(validData, d => d[axisConfig.xProperty]) as [number, number];
+      // Apply unit scale factor (T031)
+      const scaleFactor = axisConfig.unitScale / 1000;
+      const scaledDomain: [number, number] = [
+         xExtent[0] * scaleFactor,
+         xExtent[1] * scaleFactor
+      ];
+      return d3.scaleLinear()
+         .domain(scaledDomain)
+         .range([0, innerWidth])
+         .nice();
+   }, [validData, axisConfig.xProperty, axisConfig.unitScale, innerWidth]);
+
+   const yScale = useMemo(() => {
+      if (validData.length === 0) return d3.scaleLinear().domain([0, 1]).range([innerHeight, 0]);
+
+      const yExtent = d3.extent(validData, d => d[axisConfig.yProperty]) as [number, number];
+      // Apply unit scale factor (T031)
+      const scaleFactor = axisConfig.unitScale / 1000;
+      const scaledDomain: [number, number] = [
+         yExtent[0] * scaleFactor,
+         yExtent[1] * scaleFactor
+      ];
+      return d3.scaleLinear()
+         .domain(scaledDomain)
+         .range([innerHeight, 0])
+         .nice();
+   }, [validData, axisConfig.yProperty, axisConfig.unitScale, innerHeight]);
+
+   // Create coordinate transform (T071-T072) using scaled domains from xScale/yScale
+   const dataDomain = useMemo(() => ({
+      x: xScale.domain() as [number, number],
+      y: yScale.domain() as [number, number]
+   }), [xScale, yScale]);
    const screenRange = useMemo(() => ({ x: [0, innerWidth] as [number, number], y: [innerHeight, 0] as [number, number] }), [innerWidth, innerHeight]);
-   
+
    const transform = useCoordinateTransform(dataDomain, screenRange, viewport);
 
    useEffect(() => {
@@ -186,11 +229,13 @@ export default function Chart({
       getBounds
    );
 
-   // Calculate polygon selection (T110)
+   // Calculate polygon selection (T022 - with dynamic axis properties)
    const selectionMap = usePolygonSelection(
       data,
       polygons.map(p => ({ id: p.id, points: p.points, isVisible: p.isVisible })),
-      transform
+      transform,
+      axisConfig.xProperty,
+      axisConfig.yProperty
    );
 
    // Render data points (T078-T082, T111-T115)
@@ -205,7 +250,9 @@ export default function Chart({
       // Pre-filter visible polygons
       const visiblePolygons = polygons.filter(p => p.isVisible && selectionMap[p.id]);
 
-      
+      // Calculate unit scale factor
+      const scaleFactor = axisConfig.unitScale / 1000;
+
       const frameId = requestAnimationFrame(() => {
          // Clear canvas
          clearCanvas(ctx, innerWidth, innerHeight);
@@ -229,7 +276,11 @@ export default function Chart({
          ctx.beginPath();
          data.forEach((point, dataIndex) => {
             if (!pointToPolygons.has(dataIndex)) {
-               const screenPos = transform.toScreen({ x: point.x as DataX, y: point.y as DataY });
+               // Use dynamic axis properties with unit scale applied (T023, T031)
+               const screenPos = transform.toScreen({
+                  x: (point[axisConfig.xProperty] * scaleFactor) as DataX,
+                  y: (point[axisConfig.yProperty] * scaleFactor) as DataY
+               });
                ctx.moveTo(screenPos.x + CANVAS_CONSTANTS.POINT_RADIUS, screenPos.y);
                ctx.arc(screenPos.x, screenPos.y, CANVAS_CONSTANTS.POINT_RADIUS, 0, Math.PI * 2);
             }
@@ -252,7 +303,11 @@ export default function Chart({
             ctx.beginPath();
             indices.forEach(dataIndex => {
                const point = data[dataIndex];
-               const screenPos = transform.toScreen({ x: point.x as DataX, y: point.y as DataY });
+               // Use dynamic axis properties with unit scale applied (T023, T031)
+               const screenPos = transform.toScreen({
+                  x: (point[axisConfig.xProperty] * scaleFactor) as DataX,
+                  y: (point[axisConfig.yProperty] * scaleFactor) as DataY
+               });
                ctx.moveTo(screenPos.x + CANVAS_CONSTANTS.POINT_RADIUS, screenPos.y);
                ctx.arc(screenPos.x, screenPos.y, CANVAS_CONSTANTS.POINT_RADIUS, 0, Math.PI * 2);
             });
@@ -280,7 +335,11 @@ export default function Chart({
             const uniqueIndices = [...new Set(indices)];
             uniqueIndices.forEach(dataIndex => {
                const point = data[dataIndex];
-               const screenPos = transform.toScreen({ x: point.x as DataX, y: point.y as DataY });
+               // Use dynamic axis properties with unit scale applied (T023, T031)
+               const screenPos = transform.toScreen({
+                  x: (point[axisConfig.xProperty] * scaleFactor) as DataX,
+                  y: (point[axisConfig.yProperty] * scaleFactor) as DataY
+               });
                ctx.moveTo(screenPos.x + CANVAS_CONSTANTS.POINT_RADIUS, screenPos.y);
                ctx.arc(screenPos.x, screenPos.y, CANVAS_CONSTANTS.POINT_RADIUS, 0, Math.PI * 2);
             });
@@ -288,11 +347,10 @@ export default function Chart({
          });
 
          ctx.globalAlpha = 1.0; // Reset
-
       });
 
       return () => cancelAnimationFrame(frameId);
-   }, [data, polygons, transform, innerWidth, innerHeight, selectionMap]);
+   }, [data, polygons, transform, innerWidth, innerHeight, selectionMap, axisConfig.xProperty, axisConfig.yProperty, axisConfig.unitScale]);
 
    // Render polygons (T102-T109)
    useEffect(() => {
@@ -323,18 +381,10 @@ export default function Chart({
       return () => cancelAnimationFrame(frameId);
    }, [polygons, innerWidth, innerHeight]);
 
-   // Keep D3 scales for backward compatibility with Polygon component - memoized
-   const xScale = useMemo(() => 
-      d3.scaleLinear().domain(CHART_CONSTANTS.DATA_DOMAIN_X).range([0, innerWidth]),
-      [innerWidth]
-   );
-   const yScale = useMemo(() => 
-      d3.scaleLinear().domain(CHART_CONSTANTS.DATA_DOMAIN_Y).range([innerHeight, 0]),
-      [innerHeight]
-   );
-
+   // Update context scales and reset viewport when axes change (T017)
    useEffect(() => {
       dispatch({ type: 'SET_SCALES', scales: { xScale, yScale } });
+      dispatch({ type: 'RESET_VIEWPORT' });
    }, [dispatch, xScale, yScale]);
 
    if (!isMounted) return null;
@@ -379,7 +429,7 @@ export default function Chart({
                   }}
                >
                   <g transform={`translate(${margin.left},${margin.top})`}>
-                     {/* X-axis label */}
+                     {/* X-axis label (T024) - Dynamic from axisConfig */}
                      <text
                         x={innerWidth / 2}
                         y={innerHeight + 35}
@@ -388,24 +438,24 @@ export default function Chart({
                         fontSize="14px"
                         fontWeight="bold"
                      >
-                        {CHART_CONSTANTS.AXIS_LABELS.X}
+                        {axisConfig.xUnit ? `${axisConfig.xLabel} (${axisConfig.xUnit})` : axisConfig.xLabel}
                      </text>
 
-                     {/* Y-axis label */}
+                     {/* Y-axis label (T025) - Dynamic from axisConfig */}
                      <text
                         x={-innerHeight / 2}
-                        y={-35}
+                        y={-55}
                         textAnchor="middle"
                         fill={COLORS.TEXT_PRIMARY}
                         fontSize="14px"
                         fontWeight="bold"
-                        transform={`rotate(-90, ${-innerHeight / 2}, -35)`}
+                        transform={`rotate(-90, 0, 0)`}
                      >
-                        {CHART_CONSTANTS.AXIS_LABELS.Y}
+                        {axisConfig.yUnit ? `${axisConfig.yLabel} (${axisConfig.yUnit})` : axisConfig.yLabel}
                      </text>
 
                      {/* X-axis tick labels */}
-                     {CHART_CONSTANTS.TICK_VALUES_X.map(value => (
+                     {xScale.ticks(6).map(value => (
                         <text
                            key={`x-${value}`}
                            x={xScale(value)}
@@ -414,22 +464,22 @@ export default function Chart({
                            fill={COLORS.TEXT_PRIMARY}
                            fontSize="12px"
                         >
-                           {value}
+                           {value.toFixed(0)}
                         </text>
                      ))}
 
                      {/* Y-axis tick labels */}
-                     {CHART_CONSTANTS.TICK_VALUES_Y.map(value => (
+                     {yScale.ticks(6).map(value => (
                         <text
                            key={`y-${value}`}
-                           x={-10}
+                           x={-15}
                            y={yScale(value)}
                            textAnchor="end"
                            fill={COLORS.TEXT_PRIMARY}
                            fontSize="12px"
                            dominantBaseline="middle"
                         >
-                           {value}
+                           {value.toFixed(0)}
                         </text>
                      ))}
                   </g>

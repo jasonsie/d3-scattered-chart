@@ -53,6 +53,16 @@
        - state management: adding a loading state to a new and the most outer context provider 'GlobalContext'
        - component refer to 'plant circles' in this example: 'https://codepen.io/esdesignstudio/pen/RwQdEZb' 
 
+## Modify
+1. Data (state)
+   - Measurement unit state
+      - Slider, 100, 200, 400 ..... 2000 
+      - Chart: unit doesn't reach 2000 and it should be 100, 200..... also
+      - Once slider units is changed, the data dot doesn't respond to it
+2. Layout
+  - Layout for chart: the Y- axis - text - displaying is out of layout
+  - Layout for dropdown: Text color: white
+
   
 
 

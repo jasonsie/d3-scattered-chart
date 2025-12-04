@@ -53,3 +53,31 @@ export interface Point {
   x: number;
   y: number;
 }
+
+/**
+ * Props for AxisSelector component (dropdown for x/y axis selection)
+ */
+export interface AxisSelectorProps {
+  /** Which axis this selector controls ('x' or 'y') */
+  axis: 'x' | 'y';
+  /** Optional custom label (defaults to "X-Axis" or "Y-Axis") */
+  label?: string;
+  /** Optional CSS class name */
+  className?: string;
+}
+
+/**
+ * Props for UnitScaleControl component (slider for measurement unit scaling)
+ */
+export interface UnitScaleControlProps {
+  /** Optional CSS class name */
+  className?: string;
+}
+
+/**
+ * Props for Loading component (plant circles animation)
+ */
+export interface LoadingProps {
+  /** Optional message to display during loading */
+  message?: string;
+}
