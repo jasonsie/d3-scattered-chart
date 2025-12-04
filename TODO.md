@@ -137,3 +137,10 @@ div.sphereborder b:nth-child(4) {
       <b></b><b></b><b></b><b></b>
 </div>
 ```
+
+4. RWD
+   - Chart should be responsive to the screen size
+   - Under 768px, sidebar should be hidden as Drawer:
+   - Drawer: 
+     - refer to mui: drawer component:"https://mui.com/material-ui/react-drawer/"
+     - state: place the drawer open/close state in the GlobalContext

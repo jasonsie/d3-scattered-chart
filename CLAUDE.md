@@ -236,3 +236,10 @@ Uses CSS Modules for component-specific styles. Key style files:
 - `src/styles/page.module.css`: Main layout and container styles
 - `src/styles/Chart.module.css`: Chart-specific styles
 - `src/styles/globals.css`: Global styles and resets
+
+## Active Technologies
+- TypeScript 5.9.3 (strict mode enabled) (001-responsive-layout)
+- N/A (client-side state only via React Context) (001-responsive-layout)
+
+## Recent Changes
+- 001-responsive-layout: Added TypeScript 5.9.3 (strict mode enabled)
