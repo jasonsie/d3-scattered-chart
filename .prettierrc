@@ -7,6 +7,5 @@
   "trailingComma": "es5",
   "useTabs": false,
   "htmlWhitespaceSensitivity": "ignore",
-  "plugins": ["prettier-plugin-tailwindcss"]
 }
 
