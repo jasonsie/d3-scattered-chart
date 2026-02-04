@@ -6,6 +6,7 @@ import { ChartProvider } from '@/contexts/ChartContext';
 import Loading from '@/components/Loading';
 import { ReactNode } from 'react';
 import { AnimatePresence } from 'framer-motion';
+import { ChartDataProvider } from '@/contexts/ChartDataContext';
 
 /**
  * AppContent - Conditionally renders Loading component
@@ -13,16 +14,16 @@ import { AnimatePresence } from 'framer-motion';
  * Must be separate from RootLayout to use useGlobalState hook
  */
 function AppContent({ children }: { children: ReactNode }) {
-   const { isLoading, loadingMessage } = useGlobalState();
+  const { isLoading, loadingMessage } = useGlobalState();
 
-   return (
-      <>
-         <AnimatePresence mode="wait">
-            {isLoading && <Loading key="loading" message={loadingMessage} />}
-         </AnimatePresence>
-         {children}
-      </>
-   );
+  return (
+    <>
+      <AnimatePresence mode="wait">
+        {isLoading && <Loading key="loading" message={loadingMessage} />}
+      </AnimatePresence>
+      {children}
+    </>
+  );
 }
 
 /**
@@ -34,19 +35,19 @@ function AppContent({ children }: { children: ReactNode }) {
  * 3. AppContent - Conditionally renders Loading component
  */
 export default function RootLayout({
-   children,
+  children,
 }: Readonly<{
-   children: ReactNode;
+  children: ReactNode;
 }>) {
-   return (
-      <html lang="en">
-         <body suppressHydrationWarning>
-            <GlobalProvider>
-               <ChartProvider>
-                  <AppContent>{children}</AppContent>
-               </ChartProvider>
-            </GlobalProvider>
-         </body>
-      </html>
-   );
+  return (
+    <html lang="en">
+      <body suppressHydrationWarning>
+        <GlobalProvider>
+          <ChartProvider>
+            <AppContent>{children}</AppContent>
+          </ChartProvider>
+        </GlobalProvider>
+      </body>
+    </html>
+  );
 }
