@@ -6,7 +6,6 @@ import { ChartProvider } from '@/contexts/ChartContext';
 import Loading from '@/components/Loading';
 import { ReactNode } from 'react';
 import { AnimatePresence } from 'framer-motion';
-import { ChartDataProvider } from '@/contexts/ChartDataContext';
 
 /**
  * AppContent - Conditionally renders Loading component
